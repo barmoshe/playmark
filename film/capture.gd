@@ -64,6 +64,8 @@ func _run() -> void:
 		"color-fixed": await _part_color_fixed()
 		"pick-mark": await _part_pick_mark()
 		"pick-fixed": await _part_pick_fixed()
+		"group-mark": await _part_group_mark()
+		"group-fixed": await _part_group_fixed()
 		"enemy-mark": await _part_enemy_mark()
 		"enemy-fixed": await _part_enemy_fixed()
 		"debug":
@@ -356,6 +358,105 @@ func _part_enemy_fixed() -> void:
 	if opts.has("still"):
 		var img: Image = get_viewport().get_texture().get_image()
 		img.save_png(opts.still)
+
+
+## Any game: mark the node of --film-group nearest the screen center (--film-shape=box|pin).
+## --film-hit=1 drops the nearest meteor on the ship a second before the freeze, and the
+## mark rewinds to that moment. Star Dodger's scene has `meteors` and `ship`.
+func _part_group_mark() -> void:
+	var lead := float(opts.get("lead", "2.4"))
+	if opts.get("hit", "") == "1":
+		await _wait(lead - 1.0)
+		_force_hit()
+		await _wait(1.0)
+	else:
+		await _wait(lead)
+	var ov: Window = pm.open()
+	await _wait(0.6)
+	if opts.get("hit", "") == "1":
+		# Rewind to the hit: step back through the clip.
+		var n: int = ov._frames.size()
+		for k in range(0, mini(n, 9)):
+			ov.set_frame(n - 1 - k)
+			await _wait(0.08)
+		await _wait(0.3)
+	var shot := Vector2(ov.current_image().get_size())
+	var vp := get_viewport()
+	var size := vp.get_visible_rect().size
+	var best: Node2D = null
+	var best_d := INF
+	for node in get_tree().get_nodes_in_group(opts.get("group", "meteor")):
+		var p: Vector2 = (vp.get_canvas_transform() * node.global_position) / size
+		if p.y < 0.18 or p.y > 0.9 or p.x < 0.08 or p.x > 0.92:
+			continue
+		var d := p.distance_to(Vector2(0.5, 0.5))
+		if d < best_d:
+			best_d = d
+			best = node
+	var c := Vector2(0.5, 0.5) if best == null else (vp.get_canvas_transform() * best.global_position) / size
+	if ov.frame_index >= 0 and opts.get("group", "") == "ship":
+		c.y = 0.82
+	if opts.get("shape", "box") == "pin":
+		await _move_to(_ov_point(ov, c), 0.5)
+		_click = 1.0
+		ov.add_mark({"type": "pin", "x": c.x * shot.x, "y": c.y * shot.y})
+	else:
+		var half := Vector2(30, 30) / size
+		var a := c - half
+		var b := c + half
+		await _move_to(_ov_point(ov, a), 0.45)
+		_click = 1.0
+		var st = ov._stage
+		st._drag_from = a
+		var t := 0.0
+		while t < 0.45:
+			t += get_process_delta_time()
+			st._drag_to = a.lerp(b, ease(minf(t / 0.45, 1.0), -2.0))
+			_cursor = _ov_point(ov, st._drag_to)
+			await get_tree().process_frame
+		st._drag_from = null
+		ov.add_mark({"type": "box", "x": a.x * shot.x, "y": a.y * shot.y, "w": (b.x - a.x) * shot.x, "h": (b.y - a.y) * shot.y})
+	await _wait(0.3)
+	var cats := ["bug", "feel", "art", "balance", "idea"]
+	ov._stamps[maxi(cats.find(opts.get("cat", "art")), 0)].button_pressed = true
+	ov.sfx.play("chip")
+	await _wait(0.25)
+	ov._note.grab_focus()
+	var note: String = opts.get("note", "")
+	for i in note.length():
+		ov._note.text = note.substr(0, i + 1)
+		ov._note.set_caret_column(i + 1)
+		await _wait(0.04)
+	await _wait(0.4)
+	if opts.has("still"):
+		ov.get_texture().get_image().save_png(opts.still)
+	await _move_to(_ctl_point(ov, ov.save_button), 0.35)
+	_click = 1.0
+	ov.submit()
+	await pm.closed
+	_cursor = Vector2(-1, -1)
+	await _wait(0.8)
+
+
+func _part_group_fixed() -> void:
+	await _wait(1.0)
+	var ids := DirAccess.get_directories_at(ProjectSettings.globalize_path("res://.playmark/inbox"))
+	ids.sort()
+	OS.execute("node", [opts.get("cli", ""), "resolve", ids[ids.size() - 1], "--note", opts.get("res", "")])
+	if opts.get("hit", "") == "1":
+		await _wait(1.6)
+		_force_hit()
+		await _wait(float(opts.get("hold", "3.5")) - 1.6)
+	else:
+		await _wait(float(opts.get("hold", "4.0")))
+
+
+func _force_hit() -> void:
+	var scene = get_tree().current_scene
+	var ship: Node2D = scene.get("ship")
+	var ms: Array = scene.get("meteors")
+	if ship and not ms.is_empty():
+		ms[0].position = ship.position + Vector2(0, -2)
 
 
 # --- Compositing --------------------------------------------------------------------
