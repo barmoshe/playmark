@@ -27,6 +27,7 @@ var _heebo: Font
 var _heebo_light: Font
 var _mono: Font
 var _rtl: bool
+var _base := ""
 
 
 func _ready() -> void:
@@ -36,8 +37,11 @@ func _ready() -> void:
 			path = a.trim_prefix("--edit=")
 	edit = JSON.parse_string(FileAccess.get_file_as_string(path))
 	segs = edit.segments
+	# Relative paths in the edit list resolve against "base" (or the edit file's folder).
+	var b := str(edit.get("base", "."))
+	_base = b if b.is_absolute_path() else path.get_base_dir().path_join(b).simplify_path()
 	_rtl = edit.get("rtl", true)
-	var fonts: String = edit.get("fonts", "")
+	var fonts: String = _p(str(edit.get("fonts", "res://../../addons/playmark/fonts")))
 	_heebo = _font(fonts, 900)
 	_heebo_light = _font(fonts, 600)
 	_mono = _load(fonts.path_join("cascadia-mono-600.woff2"))
@@ -46,12 +50,18 @@ func _ready() -> void:
 	_music = AudioStreamPlayer.new()
 	add_child(_music)
 	if edit.has("music"):
-		var m = AudioStreamOggVorbis.load_from_file(edit.music.path)
+		var m = AudioStreamOggVorbis.load_from_file(_p(edit.music.path))
 		m.loop = true
 		_music.stream = m
 		_music.volume_db = float(edit.music.get("db", -16))
 		_music.play()
 	_next()
+
+
+func _p(p: String) -> String:
+	if p.begins_with("res://"):
+		return ProjectSettings.globalize_path(p)
+	return p if p.is_absolute_path() else _base.path_join(p)
 
 
 func _font(dir: String, weight: int) -> Font:
@@ -78,13 +88,13 @@ func _next() -> void:
 		return
 	var s: Dictionary = segs[seg_i]
 	if s.type == "clip" and s.has("audio"):
-		_voice.stream = AudioStreamWAV.load_from_file(s.audio)
+		_voice.stream = AudioStreamWAV.load_from_file(_p(s.audio))
 		_voice.volume_db = float(s.get("db", 0))
 		_voice.play(float(s.get("audio_offset", 0.0)) + float(s.from) / 30.0)
 		_voice.pitch_scale = float(s.get("speed", 1.0))
 	if s.type == "split":
-		tex.set_image(Image.load_from_file(s.left))
-		tex_b.set_image(Image.load_from_file(s.right))
+		tex.set_image(Image.load_from_file(_p(s.left)))
+		tex_b.set_image(Image.load_from_file(_p(s.right)))
 
 
 func _dur(s: Dictionary) -> float:
@@ -109,7 +119,7 @@ func _process(delta: float) -> void:
 		f = mini(f, int(s.to) - 1)
 		if f != _loaded_frame:
 			_loaded_frame = f
-			var img := Image.load_from_file(str(s.dir).path_join("%05d.png" % f))
+			var img := Image.load_from_file(_p(str(s.dir)).path_join("%05d.png" % f))
 			if img:
 				tex.set_image(img)
 	queue_redraw()

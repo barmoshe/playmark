@@ -3,3 +3,5 @@ node_modules/
 .godot/
 .playmark/
 *.import
+footage/
+*.avi
