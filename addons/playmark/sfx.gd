@@ -1,7 +1,7 @@
 extends Node
 ## Small UI sounds, synthesized at startup: no audio files to ship.
 ## shutter (open), pop (pin), tick (box), chip (category), stamp (save), swish (cancel),
-## fixed (a mark came back fixed). Each is a few layers (a tone with its own pitch and decay,
+## fixed (a mark came back fixed), key and key_back (typing the note, deleting). Each is a few layers (a tone with its own pitch and decay,
 ## band-passed noise for the attack) and the longer ones get a short room. Its own seeded RNG:
 ## the sounds are the same every run and the game's global random state is left alone.
 
@@ -9,7 +9,10 @@ const RATE := 44100
 
 var _players := {}
 var _rng := RandomNumberGenerator.new()
+var _pitch := RandomNumberGenerator.new()  # key presses vary a little, like real keys
 var _task := -1
+## Typing sits under everything else.
+const PEAK := {"key": 0.32, "key_back": 0.28}
 
 
 func _ready() -> void:
@@ -30,12 +33,18 @@ func _synthesize() -> Dictionary:
 	return {
 		"shutter": _shutter(), "pop": _pop(), "tick": _tick(), "chip": _chip(),
 		"stamp": _stamp(), "swish": _swish(), "fixed": _fixed(),
+		"key": _key(2400.0), "key_back": _key(1500.0),
 	}
 
 
 func _install(sounds: Dictionary) -> void:
 	for sfx_name in sounds:
-		_add(sfx_name, sounds[sfx_name])
+		_add(sfx_name, sounds[sfx_name], PEAK.get(sfx_name, 0.7))
+
+
+## One key press: a slightly different pitch each time, so fast typing doesn't machine-gun.
+func key(deleting := false) -> void:
+	play("key_back" if deleting else "key", _pitch.randf_range(0.9, 1.12))
 
 
 func play(sfx_name: String, pitch := 1.0) -> void:
@@ -63,6 +72,7 @@ func _add(sfx_name: String, samples: PackedFloat32Array, peak := 0.7) -> void:
 	var p := AudioStreamPlayer.new()
 	p.stream = wav
 	p.volume_db = -8.0
+	p.max_polyphony = 3 if sfx_name.begins_with("key") else 1
 	add_child(p)
 	_players[sfx_name] = p
 
@@ -130,6 +140,15 @@ func _swish() -> PackedFloat32Array:
 		band += k * high
 		low += k * band
 		out[i] = band * pow(sin(u * PI), 1.6)
+	return out
+
+
+func _key(click: float) -> PackedFloat32Array:
+	# A soft keyboard key: the click of the switch, the keycap bottoming out under it.
+	var out := _buf(0.05)
+	_mix(out, _noise_band(0.02, click * 1.6, 1.3, 280.0), 0.0, 0.8)
+	_mix(out, _tone(click, 0.1, 0.02, 200.0, 0.0003, 500.0), 0.0, 0.25)
+	_mix(out, _tone(330.0, 0.25, 0.04, 110.0, 0.0008, 200.0), 0.004, 0.4)
 	return out
 
 

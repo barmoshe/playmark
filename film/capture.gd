@@ -141,8 +141,7 @@ func _part_mark() -> void:
 	await _wait(0.3)
 	ov._note.grab_focus()
 	for i in NOTE.length():
-		ov._note.text = NOTE.substr(0, i + 1)
-		ov._note.set_caret_column(i + 1)
+		ov._note.insert_text_at_caret(NOTE[i])
 		await _wait(0.045)
 	await _wait(0.45)
 	# Save: the cursor goes to the button.
@@ -193,8 +192,7 @@ func _part_color_mark() -> void:
 	await _wait(0.25)
 	ov._note.grab_focus()
 	for i in NOTE_COLOR.length():
-		ov._note.text = NOTE_COLOR.substr(0, i + 1)
-		ov._note.set_caret_column(i + 1)
+		ov._note.insert_text_at_caret(NOTE_COLOR[i])
 		await _wait(0.05)
 	await _wait(0.35)
 	await _move_to(_ctl_point(ov, ov.save_button), 0.35)
@@ -247,8 +245,7 @@ func _part_pick_mark() -> void:
 	ov._note.grab_focus()
 	var note: String = opts.get("note", "")
 	for i in note.length():
-		ov._note.text = note.substr(0, i + 1)
-		ov._note.set_caret_column(i + 1)
+		ov._note.insert_text_at_caret(note[i])
 		await _wait(0.05)
 	await _wait(0.35)
 	if opts.has("still"):
@@ -347,8 +344,7 @@ func _part_enemy_mark() -> void:
 	ov._note.grab_focus()
 	var note: String = opts.get("note", "")
 	for i in note.length():
-		ov._note.text = note.substr(0, i + 1)
-		ov._note.set_caret_column(i + 1)
+		ov._note.insert_text_at_caret(note[i])
 		await _wait(0.04)
 	await _wait(0.4)
 	if opts.has("still"):
@@ -437,8 +433,7 @@ func _part_group_mark() -> void:
 	ov._note.grab_focus()
 	var note: String = opts.get("note", "")
 	for i in note.length():
-		ov._note.text = note.substr(0, i + 1)
-		ov._note.set_caret_column(i + 1)
+		ov._note.insert_text_at_caret(note[i])
 		await _wait(0.04)
 	await _wait(0.4)
 	if opts.has("still"):

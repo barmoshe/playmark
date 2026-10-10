@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Typing the note sounds like typing: a soft key click per character (a slightly different pitch each time), a lower one for delete. Pasting and `set_note()` stay quiet.
 - New UI sounds: layered (a tone with its own pitch and decay, noise for the attack), 44.1 kHz, every one ending on a fade; the "fixed" chime is a bell arpeggio in a small room. Built on a worker thread with their own seeded RNG, so a game's first frames and its random state are left alone.
 - Showcase videos in English and Hebrew: the color mark, the Thornback in Wandcraft, and Star Dodger from a blank project, with recording scripts in `film/showcase/`. On the site.
 

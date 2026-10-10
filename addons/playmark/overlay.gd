@@ -26,6 +26,7 @@ var _textures := {}
 var _stage: Stage
 var _scrub: Scrubber
 var _note: TextEdit
+var _note_len := 0
 var _stamps: Array[Button] = []
 var _inbox_label: Label
 var _hint: Label
@@ -121,6 +122,7 @@ func set_frame(i: int) -> void:
 
 func set_note(text: String, category := "") -> void:
 	_note.text = text
+	_note_len = text.length()
 	for i in CATEGORIES.size():
 		_stamps[i].button_pressed = CATEGORIES[i][0] == category
 
@@ -179,6 +181,14 @@ func _cancel() -> void:
 		_busy = true
 		_play("swish")
 		cancelled.emit()
+
+
+## text_changed fires for typing only (set_note() is silent): one character in or out is a key.
+func _on_note_typed() -> void:
+	var d := _note.text.length() - _note_len
+	_note_len = _note.text.length()
+	if sfx and absi(d) == 1:
+		sfx.key(d < 0)
 
 
 func _play(sfx_name: String, pitch := 1.0) -> void:
@@ -303,6 +313,7 @@ func _build() -> void:
 	_note.custom_minimum_size = Vector2(0, 74)
 	_note.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
 	left.add_child(_note)
+	_note.text_changed.connect(_on_note_typed)
 
 	var right := VBoxContainer.new()
 	right.alignment = BoxContainer.ALIGNMENT_END
