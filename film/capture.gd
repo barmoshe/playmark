@@ -60,6 +60,8 @@ func _run() -> void:
 		"color-fixed": await _part_color_fixed()
 		"pick-mark": await _part_pick_mark()
 		"pick-fixed": await _part_pick_fixed()
+		"enemy-mark": await _part_enemy_mark()
+		"enemy-fixed": await _part_enemy_fixed()
 	_recording = false
 	var f := FileAccess.open(out.path_join("meta.json"), FileAccess.WRITE)
 	f.store_string(JSON.stringify({"first_frame": _first_frame, "frames": _n, "fps": 30, "part": part}))
@@ -238,6 +240,93 @@ func _part_pick_fixed() -> void:
 	ids.sort()
 	OS.execute("node", [opts.get("cli", ""), "resolve", ids[ids.size() - 1], "--note", opts.get("res", "")])
 	await _wait(float(opts.get("hold", "4.5")))
+
+
+## Wandcraft: spawn --film-kind enemies near the player (the bot fights them), then box
+## the nearest one, stamp ART, type --film-note, save. Recording-only: the game has no
+## spawn flag, so the driver calls world.spawn_enemy itself.
+func _spawn_kind() -> Array:
+	var world = get_tree().current_scene.get("world")
+	var kind := StringName(opts.get("kind", "ram"))
+	var out := []
+	for off in [Vector2(70, -30), Vector2(-80, 20)]:
+		var p: Vector2 = world.player.global_position + off
+		if world.solid_at(p):
+			p = world.player.global_position + Vector2(off.x * 0.5, 0)
+		var e = world.spawn_enemy(kind, p)
+		e.spawn_t = 0.0
+		e.sprite.visible = true
+		e.max_hp *= 20.0
+		e.hp = e.max_hp
+		out.append(e)
+	return out
+
+
+func _part_enemy_mark() -> void:
+	var foes := _spawn_kind()
+	await _wait(float(opts.get("lead", "2.6")))
+	var ov: Window = pm.open()
+	await _wait(0.6)
+	var shot := Vector2(ov.current_image().get_size())
+	var vp := get_viewport()
+	# The enemy of that kind nearest the screen center, as frozen.
+	var world = get_tree().current_scene.get("world")
+	var kind := StringName(opts.get("kind", "ram"))
+	var e: Node2D = foes[0]
+	var best := INF
+	for en in world.enemies:
+		if en.kind == kind and not en.dead and en.sprite.visible and en.spawn_t <= 0.0:
+			var d: float = en.global_position.distance_to(world.player.global_position)
+			if d < best:
+				best = d
+				e = en
+	var c := (vp.get_canvas_transform() * e.global_position) / vp.get_visible_rect().size
+	var half := Vector2(18, 14) / vp.get_visible_rect().size
+	var a := c - half - Vector2(0, half.y * 0.6)
+	var b := c + half
+	await _move_to(_ov_point(ov, a), 0.5)
+	_click = 1.0
+	var st = ov._stage
+	st._drag_from = a
+	var t := 0.0
+	while t < 0.5:
+		t += get_process_delta_time()
+		st._drag_to = a.lerp(b, ease(minf(t / 0.5, 1.0), -2.0))
+		_cursor = _ov_point(ov, st._drag_to)
+		await get_tree().process_frame
+	st._drag_from = null
+	ov.add_mark({"type": "box", "x": a.x * shot.x, "y": a.y * shot.y, "w": (b.x - a.x) * shot.x, "h": (b.y - a.y) * shot.y})
+	await _wait(0.35)
+	ov._stamps[2].button_pressed = true
+	ov.sfx.play("chip")
+	await _wait(0.25)
+	ov._note.grab_focus()
+	var note: String = opts.get("note", "")
+	for i in note.length():
+		ov._note.text = note.substr(0, i + 1)
+		ov._note.set_caret_column(i + 1)
+		await _wait(0.04)
+	await _wait(0.4)
+	if opts.has("still"):
+		ov.get_texture().get_image().save_png(opts.still)
+	await _move_to(_ctl_point(ov, ov.save_button), 0.35)
+	_click = 1.0
+	ov.submit()
+	await pm.closed
+	_cursor = Vector2(-1, -1)
+	await _wait(1.0)
+
+
+func _part_enemy_fixed() -> void:
+	_spawn_kind()
+	await _wait(1.4)
+	var ids := DirAccess.get_directories_at(ProjectSettings.globalize_path("res://.playmark/inbox"))
+	ids.sort()
+	OS.execute("node", [opts.get("cli", ""), "resolve", ids[ids.size() - 1], "--note", opts.get("res", "")])
+	await _wait(float(opts.get("hold", "5.0")))
+	if opts.has("still"):
+		var img: Image = get_viewport().get_texture().get_image()
+		img.save_png(opts.still)
 
 
 # --- Compositing --------------------------------------------------------------------

@@ -1,0 +1,40 @@
+name: release
+# Push a tag vX.Y.Z (after `node scripts/versions.mjs bump X.Y.Z` and a commit):
+# CI runs again, the versions must match the tag, and a GitHub release goes out with the
+# changelog section and an addon-only zip (for the Godot Asset Library and manual installs).
+# Claude Code users get the new version with `claude plugin update playmark`: this repo is
+# its own marketplace, and plugin.json's version is what the update reads.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  release:
+    needs: ci
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Versions match the tag
+        run: node scripts/versions.mjs check --tag "${GITHUB_REF_NAME}"
+      - name: Notes from CHANGELOG.md
+        run: |
+          v="${GITHUB_REF_NAME#v}"
+          awk -v v="## $v" '$0==v{on=1;next} /^## /{on=0} on' CHANGELOG.md > notes.md
+          printf '\n**Install in Claude Code:** `/plugin marketplace add barmoshe/playmark`, `/plugin install playmark@playmark`, then `/playmark:install` in your game. Update: `claude plugin update playmark`.\n' >> notes.md
+      - name: Addon zip (only addons/, via .gitattributes export-ignore)
+        run: git archive --format=zip -o "playmark-${GITHUB_REF_NAME}.zip" HEAD
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" "playmark-${GITHUB_REF_NAME}.zip" \
+            --title "Playmark ${GITHUB_REF_NAME#v}" --notes-file notes.md --verify-tag

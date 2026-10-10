@@ -3,25 +3,38 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_call:
 
 jobs:
-  node:
+  plugin:
+    name: Claude Code plugin
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
-      - run: node --test tests/*.test.mjs
+      - name: Versions agree
+        run: node scripts/versions.mjs check
+      - name: Node tests (inbox, installer, hook)
+        run: node --test tests/*.test.mjs
+      - name: Validate the plugin and marketplace (strict)
+        run: |
+          npm install -g @anthropic-ai/claude-code
+          claude plugin validate --strict .
+          claude plugin validate --strict .claude-plugin/plugin.json
+          claude plugin validate --strict commands
+          claude plugin validate --strict skills
 
   godot:
+    name: Godot ${{ matrix.godot }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         godot: ["4.5.1", "4.7.2"]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Download Godot ${{ matrix.godot }}
         run: |
           curl -sSLo godot.zip "https://github.com/godotengine/godot/releases/download/${{ matrix.godot }}-stable/Godot_v${{ matrix.godot }}-stable_linux.x86_64.zip"
