@@ -19,7 +19,7 @@ signal opened
 signal closed
 signal saved(location: String)
 
-const VERSION := "0.2.0"
+const VERSION := "0.3.0"
 const Settings := preload("res://addons/playmark/settings.gd")
 const Brand := preload("res://addons/playmark/brand.gd")
 const Overlay := preload("res://addons/playmark/overlay.gd")

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.0
+
+- A real example in the README: redesigning an enemy in Wandcraft from one mark, before and after.
+- `/playmark:new`: start a blank Godot game with Playmark wired in, a playable first scene and a `CLAUDE.md` for the play, mark, fix loop.
+- Ghosts draw in screen pixels, so their numbers stay crisp at any zoom.
+- Releases: tag `vX.Y.Z` and CI publishes the GitHub release with an addon-only zip; `scripts/versions.mjs` keeps every version in step.
+
 ## 0.2.0
 
 - Photo mode: the frame freezes on a blueprint stage; pins pop, boxes show their size, a stamp lands on save.

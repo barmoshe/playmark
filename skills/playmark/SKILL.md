@@ -30,6 +30,12 @@ A **mark** is a folder in `<godot project>/.playmark/inbox/<id>/`, saved when th
 - Never edit marks. When something is fixed: `node <plugin>/scripts/inbox.mjs resolve <id> --note "<one line>"`. Marks are the player's; don't resolve one you didn't fix.
 - Marks are local and git-ignored by default (`.playmark/.gitignore`). Don't commit them unless asked.
 
+## Starting from nothing
+
+`/playmark:new <folder>` makes a blank Godot game with Playmark already in it and a `CLAUDE.md`
+for the loop: build one small step, ask the player to play it and mark what's off, triage the
+marks, commit, repeat.
+
 ## Commands
 
 `inbox.mjs list [--all] | show <id> | resolve <id> --note "" | reopen <id> | video <id>`. Ids match on a prefix or the last 4 characters.

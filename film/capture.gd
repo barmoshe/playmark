@@ -26,6 +26,7 @@ var _cursor := Vector2(-1, -1)  # in output pixels; negative hides it
 var _cursor_img: Image
 var _click := 0.0
 var opts := {}
+var _held := []  # [enemy, position] kept still every frame (--film-hold-at)
 
 
 func _ready() -> void:
@@ -46,6 +47,9 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	_click = maxf(_click - delta * 5.0, 0.0)
+	for h in _held:
+		if is_instance_valid(h[0]):
+			h[0].global_position = h[1]
 	if _recording:
 		_frame()
 
@@ -62,6 +66,14 @@ func _run() -> void:
 		"pick-fixed": await _part_pick_fixed()
 		"enemy-mark": await _part_enemy_mark()
 		"enemy-fixed": await _part_enemy_fixed()
+		"debug":
+			_spawn_kind()
+			await _wait(2.6)
+			var vp := get_viewport()
+			var world = get_tree().current_scene.get("world")
+			print("film-debug vis=", vp.get_visible_rect().size, " tex=", vp.get_texture().get_image().get_size(), " canvas=", vp.get_canvas_transform())
+			for en in world.enemies:
+				print("film-debug ", en.kind, " node=", en.global_position, " sprite=", en.sprite.global_position, " vis=", en.sprite.visible, " spawn_t=", en.spawn_t, " screen=", vp.get_canvas_transform() * en.sprite.global_position)
 	_recording = false
 	var f := FileAccess.open(out.path_join("meta.json"), FileAccess.WRITE)
 	f.store_string(JSON.stringify({"first_frame": _first_frame, "frames": _n, "fps": 30, "part": part}))
@@ -249,10 +261,24 @@ func _spawn_kind() -> Array:
 	var world = get_tree().current_scene.get("world")
 	var kind := StringName(opts.get("kind", "ram"))
 	var out := []
-	for off in [Vector2(70, -30), Vector2(-80, 20)]:
+	# --film-hold-at=x,y: one enemy on that open spot, held still, so the shot frames it clearly.
+	if opts.has("hold-at"):
+		var xy: PackedStringArray = str(opts["hold-at"]).split(",")
+		var at := Vector2(float(xy[0]), float(xy[1]))
+		var held = world.spawn_enemy(kind, at)
+		held.spawn_t = 0.0
+		held.sprite.visible = true
+		held.max_hp *= 50.0
+		held.hp = held.max_hp
+		_held.append([held, at])
+		return [held]
+	var spots := [Vector2(70, 40), Vector2(90, -20), Vector2(-60, 50), Vector2(40, 70), Vector2(110, 30), Vector2(-90, -10)]
+	for off in spots:
+		if out.size() >= 2:
+			break
 		var p: Vector2 = world.player.global_position + off
-		if world.solid_at(p):
-			p = world.player.global_position + Vector2(off.x * 0.5, 0)
+		if world.solid_at(p) or world.solid_at(p + Vector2(10, 0)) or world.solid_at(p - Vector2(10, 0)):
+			continue
 		var e = world.spawn_enemy(kind, p)
 		e.spawn_t = 0.0
 		e.sprite.visible = true
@@ -273,16 +299,19 @@ func _part_enemy_mark() -> void:
 	var world = get_tree().current_scene.get("world")
 	var kind := StringName(opts.get("kind", "ram"))
 	var e: Node2D = foes[0]
-	var best := INF
-	for en in world.enemies:
-		if en.kind == kind and not en.dead and en.sprite.visible and en.spawn_t <= 0.0:
-			var d: float = en.global_position.distance_to(world.player.global_position)
+	var best := INF if _held.is_empty() else -1.0
+	for en in (world.enemies if _held.is_empty() else []):
+		if en.kind == kind and not en.dead and en.sprite.visible and en.spawn_t <= 0.0 and not world.solid_at(en.global_position):
+			var d: float = en.sprite.global_position.distance_to(world.player.sprite.global_position if "sprite" in world.player else world.player.global_position)
 			if d < best:
 				best = d
 				e = en
-	var c := (vp.get_canvas_transform() * e.global_position) / vp.get_visible_rect().size
-	var half := Vector2(18, 14) / vp.get_visible_rect().size
-	var a := c - half - Vector2(0, half.y * 0.6)
+	# Wandcraft's sim moves the sprite, not the enemy node: aim at what is drawn.
+	var drawn: Vector2 = e.sprite.global_position if "sprite" in e else e.global_position
+	var c := (vp.get_canvas_transform() * drawn) / vp.get_visible_rect().size
+	# A roomy box: the number tag sits in its corner without hiding the enemy.
+	var half := Vector2(34, 24) / vp.get_visible_rect().size
+	var a := c - half + Vector2(-half.x * 0.25, -half.y * 0.35)
 	var b := c + half
 	await _move_to(_ov_point(ov, a), 0.5)
 	_click = 1.0
