@@ -1,0 +1,178 @@
+{
+ "rtl": false,
+ "segments": [
+  {
+   "type": "card",
+   "dur": 2.0,
+   "title": "Star Dodger",
+   "sub": "A whole game from a blank project, in four marks"
+  },
+  {
+   "type": "clip",
+   "dir": "sd/blank/frames",
+   "from": 0,
+   "to": 75,
+   "audio": "sd/blank/full.wav",
+   "audio_offset": 4.0,
+   "caption": "A blank Godot project, with Playmark"
+  },
+  {
+   "type": "clip",
+   "dir": "sd/step1/frames",
+   "from": 0,
+   "to": 120,
+   "audio": "sd/step1/full.wav",
+   "audio_offset": 4.0,
+   "caption": "Step 1: a ship, meteors, stars"
+  },
+  {
+   "type": "clip",
+   "dir": "sd/m1-mark/frames",
+   "from": 50,
+   "to": 175,
+   "audio": "sd/m1-mark/full.wav",
+   "audio_offset": 4.0,
+   "kicker": "1",
+   "label": "Mark",
+   "caption": "The meteors should look dangerous",
+   "cap": "top"
+  },
+  {
+   "type": "clip",
+   "dir": "sd/m1-mark/frames",
+   "from": 233,
+   "to": 303,
+   "audio": "sd/m1-mark/full.wav",
+   "audio_offset": 4.0,
+   "kicker": "1",
+   "label": "Mark",
+   "caption": "The meteors should look dangerous",
+   "cap": "top"
+  },
+  {
+   "type": "clip",
+   "dir": "sd/m1-fixed/frames",
+   "from": 20,
+   "to": 135,
+   "audio": "sd/m1-fixed/full.wav",
+   "audio_offset": 4.0,
+   "kicker": "1",
+   "label": "Claude fixes",
+   "caption": "Red with a glow: one line in tune.gd"
+  },
+  {
+   "type": "clip",
+   "dir": "sd/m2-mark/frames",
+   "from": 50,
+   "to": 175,
+   "audio": "sd/m2-mark/full.wav",
+   "audio_offset": 4.0,
+   "kicker": "2",
+   "label": "Mark",
+   "caption": "The ship should glide, not snap",
+   "cap": "top"
+  },
+  {
+   "type": "clip",
+   "dir": "sd/m2-mark/frames",
+   "from": 229,
+   "to": 299,
+   "audio": "sd/m2-mark/full.wav",
+   "audio_offset": 4.0,
+   "kicker": "2",
+   "label": "Mark",
+   "caption": "The ship should glide, not snap",
+   "cap": "top"
+  },
+  {
+   "type": "clip",
+   "dir": "sd/m2-fixed/frames",
+   "from": 20,
+   "to": 135,
+   "audio": "sd/m2-fixed/full.wav",
+   "audio_offset": 4.0,
+   "kicker": "2",
+   "label": "Claude fixes",
+   "caption": "Acceleration 0 to 900: now it glides"
+  },
+  {
+   "type": "clip",
+   "dir": "sd/m3-mark/frames",
+   "from": 50,
+   "to": 175,
+   "audio": "sd/m3-mark/full.wav",
+   "audio_offset": 4.0,
+   "kicker": "3",
+   "label": "Mark",
+   "caption": "Start slow, and speed up as the score climbs",
+   "cap": "top"
+  },
+  {
+   "type": "clip",
+   "dir": "sd/m3-mark/frames",
+   "from": 261,
+   "to": 331,
+   "audio": "sd/m3-mark/full.wav",
+   "audio_offset": 4.0,
+   "kicker": "3",
+   "label": "Mark",
+   "caption": "Start slow, and speed up as the score climbs",
+   "cap": "top"
+  },
+  {
+   "type": "clip",
+   "dir": "sd/m3-fixed/frames",
+   "from": 20,
+   "to": 135,
+   "audio": "sd/m3-fixed/full.wav",
+   "audio_offset": 4.0,
+   "kicker": "3",
+   "label": "Claude fixes",
+   "caption": "Speed 120, plus 6 per point"
+  },
+  {
+   "type": "clip",
+   "dir": "sd/m4-mark/frames",
+   "from": 40,
+   "to": 190,
+   "audio": "sd/m4-mark/full.wav",
+   "audio_offset": 4.0,
+   "kicker": "4",
+   "label": "Mark",
+   "caption": "Shake and sparks when a meteor hits",
+   "cap": "top"
+  },
+  {
+   "type": "clip",
+   "dir": "sd/m4-mark/frames",
+   "from": 291,
+   "to": 361,
+   "audio": "sd/m4-mark/full.wav",
+   "audio_offset": 4.0,
+   "kicker": "4",
+   "label": "Mark",
+   "caption": "Shake and sparks when a meteor hits",
+   "cap": "top"
+  },
+  {
+   "type": "clip",
+   "dir": "sd/m4-fixed/frames",
+   "from": 10,
+   "to": 150,
+   "audio": "sd/m4-fixed/full.wav",
+   "audio_offset": 4.0,
+   "kicker": "4",
+   "label": "Claude fixes",
+   "caption": "A hit shakes the screen and throws 18 sparks"
+  },
+  {
+   "type": "card",
+   "dur": 3.2,
+   "title": "github.com/barmoshe/playmark",
+   "size": 76,
+   "sub": "A Godot addon and a Claude Code plugin, open source",
+   "note": "github.com/barmoshe/star-dodger"
+  }
+ ],
+ "base": "../../footage"
+}

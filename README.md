@@ -122,6 +122,10 @@ A blank Godot project with Playmark already wired in: one playable scene (a squa
 an empty room), a `CLAUDE.md` that teaches the build, playtest, mark, fix loop, and a first
 commit. Say what game to build, play each step, mark what's off.
 
+[Star Dodger](https://github.com/barmoshe/star-dodger) was built this way: a blank project, step 1,
+then four marks while playing, one commit each. Watch it on
+[playmark.bar-builds.com](https://playmark.bar-builds.com/#new) (55 s, with sound).
+
 <details>
 <summary>Without Claude Code</summary>
 
@@ -246,6 +250,8 @@ tests/run_selftest.sh                                         # the whole loop, 
 
 `demo/` holds the toy scene (four shapes, one table of looks) and the arena the selftest uses.
 `film/capture.gd` drives the game under Godot's movie writer; every GIF here was recorded with it.
+`film/showcase/` holds the scripts that record the three showcase videos, their edit lists (English and
+Hebrew, rendered by `film/cut`) and the finished videos.
 
 ## License
 

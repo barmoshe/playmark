@@ -1,0 +1,81 @@
+{
+ "rtl": false,
+ "segments": [
+  {
+   "type": "card",
+   "dur": 2.0,
+   "title": "Playmark",
+   "sub": "Wandcraft: an enemy that doesn't look right"
+  },
+  {
+   "type": "clip",
+   "dir": "thorn-mark/frames",
+   "from": 20,
+   "to": 180,
+   "audio": "thorn-mark/full.wav",
+   "audio_offset": 4.0,
+   "kicker": "1",
+   "label": "Mark",
+   "caption": "A box around the Thornback: make it a charging ram",
+   "cap": "top"
+  },
+  {
+   "type": "clip",
+   "dir": "thorn-mark/frames",
+   "from": 340,
+   "to": 455,
+   "audio": "thorn-mark/full.wav",
+   "audio_offset": 4.0,
+   "kicker": "1",
+   "label": "Mark",
+   "caption": "Save: a screenshot, a short clip and the game's context",
+   "cap": "top"
+  },
+  {
+   "type": "clip",
+   "dir": "thorn-fixed/frames",
+   "from": 15,
+   "to": 105,
+   "audio": "thorn-fixed/full.wav",
+   "audio_offset": 4.0,
+   "kicker": "2",
+   "label": "Claude fixes",
+   "caption": "Claude redraws it in bestiary.gd"
+  },
+  {
+   "type": "clip",
+   "dir": "thorn-fixed/frames",
+   "from": 105,
+   "to": 190,
+   "audio": "thorn-fixed/full.wav",
+   "audio_offset": 4.0,
+   "zoom": [
+    1260,
+    640,
+    1.6,
+    2.6
+   ],
+   "kicker": "2",
+   "label": "Claude fixes",
+   "caption": "A curled horn, spikes along the back, a glowing eye"
+  },
+  {
+   "type": "split",
+   "dur": 3.0,
+   "left": "thorn-split/before.png",
+   "right": "thorn-split/after.png",
+   "labels": [
+    "Before",
+    "After"
+   ]
+  },
+  {
+   "type": "card",
+   "dur": 2.8,
+   "title": "github.com/barmoshe/playmark",
+   "size": 76,
+   "sub": "A Godot addon and a Claude Code plugin, open source"
+  }
+ ],
+ "base": "../../footage"
+}
