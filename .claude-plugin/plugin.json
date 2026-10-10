@@ -2,12 +2,19 @@
   "name": "playmark",
   "displayName": "Playmark",
   "version": "0.3.0",
-  "description": "Mark what you see while playing your Godot game, write a note, and hand it to Claude Code. Each mark carries the frame, your pins and boxes, the last seconds of play, recent logs and the game's state.",
+  "description": "Mark what you see while playing your Godot game, write a note, and hand it to Claude Code: the frame, the last seconds of play, the log and the code under your pin. Fixes show up in the game. /playmark:new starts a blank game with it built in.",
   "author": {
     "name": "Bar Moshe"
   },
   "license": "MIT",
   "homepage": "https://github.com/barmoshe/playmark",
   "repository": "https://github.com/barmoshe/playmark",
-  "keywords": ["godot", "gamedev", "playtest", "feedback", "screenshot", "annotation"]
+  "keywords": [
+    "godot",
+    "gamedev",
+    "playtest",
+    "feedback",
+    "screenshot",
+    "annotation"
+  ]
 }
