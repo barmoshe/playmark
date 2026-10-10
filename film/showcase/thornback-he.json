@@ -1,0 +1,83 @@
+{
+ "rtl": true,
+ "segments": [
+  {
+   "type": "card",
+   "dur": 2.0,
+   "title": "Playmark",
+   "sub": "Wandcraft: אויב שלא נראה כמו שצריך"
+  },
+  {
+   "type": "clip",
+   "dir": "thorn-mark/frames",
+   "from": 20,
+   "to": 180,
+   "audio": "thorn-mark/full.wav",
+   "audio_offset": 4.0,
+   "kicker": "1",
+   "label": "מסמנים",
+   "caption": "קופסה סביב ה-Thornback, ובקשה: שייראה כמו איל מסתער",
+   "cap": "top"
+  },
+  {
+   "type": "clip",
+   "dir": "thorn-mark/frames",
+   "from": 340,
+   "to": 455,
+   "audio": "thorn-mark/full.wav",
+   "audio_offset": 4.0,
+   "kicker": "1",
+   "label": "מסמנים",
+   "caption": "שמירה: צילום, קליפ קצר וההקשר של המשחק",
+   "cap": "top"
+  },
+  {
+   "type": "clip",
+   "dir": "thorn-fixed/frames",
+   "from": 15,
+   "to": 105,
+   "audio": "thorn-fixed/full.wav",
+   "audio_offset": 4.0,
+   "kicker": "2",
+   "label": "Claude מתקן",
+   "caption": "Claude מצייר אותו מחדש ב-bestiary.gd",
+   "kicker_side": "other"
+  },
+  {
+   "type": "clip",
+   "dir": "thorn-fixed/frames",
+   "from": 105,
+   "to": 190,
+   "audio": "thorn-fixed/full.wav",
+   "audio_offset": 4.0,
+   "zoom": [
+    1260,
+    640,
+    1.6,
+    2.6
+   ],
+   "kicker": "2",
+   "label": "Claude מתקן",
+   "caption": "קרן מסולסלת, קוצים על הגב, עין זוהרת",
+   "kicker_side": "other"
+  },
+  {
+   "type": "split",
+   "dur": 3.0,
+   "left": "thorn-split/before.png",
+   "right": "thorn-split/after.png",
+   "labels": [
+    "לפני",
+    "אחרי"
+   ]
+  },
+  {
+   "type": "card",
+   "dur": 2.8,
+   "title": "github.com/barmoshe/playmark",
+   "size": 76,
+   "sub": "תוסף ל-Godot ופלאגין ל-Claude Code, קוד פתוח"
+  }
+ ],
+ "base": "../../footage"
+}

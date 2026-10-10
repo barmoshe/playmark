@@ -1,9 +1,5 @@
 {
  "rtl": true,
- "music": {
-  "path": "../../wandcraft/game/assets/audio/music_title.ogg",
-  "db": -20
- },
  "segments": [
   {
    "type": "card",
@@ -32,7 +28,8 @@
    "audio_offset": 4.0,
    "kicker": "2",
    "label": "Claude מתקן",
-   "caption": "שורה אחת בקוד, ו-Boxy כתום"
+   "caption": "שורה אחת בקוד, ו-Boxy כתום",
+   "kicker_side": "other"
   },
   {
    "type": "card",

@@ -9,7 +9,10 @@ extends Node
 ##   --film-part=pick-mark   any game with a `shapes` array: pin shapes[--film-target],
 ##                           optional rewind (--film-rewind=1), stamp --film-cat, type --film-note
 ##   --film-part=pick-fixed  resolve the newest mark with --film-res, then hold on the toast
+##   --film-part=play        just play for --film-hold seconds (default 4): a game before any mark
 ##   --film-still=<png>      also save the overlay right before Save (README shots)
+##   --film-bus=Music:mute,SFX:-12   the game's own buses while recording (mute, or a dB
+##                           level): the video's music bed and Playmark's sounds lead
 
 const W := 1920
 const H := 1080
@@ -63,6 +66,7 @@ func _run() -> void:
 		"color-mark": await _part_color_mark()
 		"color-fixed": await _part_color_fixed()
 		"pick-mark": await _part_pick_mark()
+		"play": await _wait(float(opts.get("hold", "4.0")))
 		"pick-fixed": await _part_pick_fixed()
 		"group-mark": await _part_group_mark()
 		"group-fixed": await _part_group_fixed()
@@ -87,6 +91,15 @@ func _run() -> void:
 func _start() -> void:
 	_first_frame = Engine.get_frames_drawn()
 	_recording = true
+	for spec in str(opts.get("bus", "")).split(",", false):
+		var kv := spec.split(":")
+		var i := AudioServer.get_bus_index(kv[0])
+		if i < 0 or kv.size() < 2:
+			push_warning("film: no bus %s" % spec)
+		elif kv[1] == "mute":
+			AudioServer.set_bus_mute(i, true)
+		else:
+			AudioServer.set_bus_volume_db(i, AudioServer.get_bus_volume_db(i) + float(kv[1]))
 
 
 func _part_mark() -> void:

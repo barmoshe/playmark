@@ -2,7 +2,7 @@
 # Records the Star Dodger showcase: each mark before, the one-line fix in tune.gd (committed in the
 # game's repo), each mark after. Footage lands in $OUT/<step>/frames + mm.avi (audio).
 #
-#   film/showcase/record-star-dodger.sh [first-step]     first-step: m1 | m2 | m3 | m4 (default m1)
+#   film/showcase/record-star-dodger.sh [first-step] [last-step]    m1 | m2 | m3 | m4 (default m1 m4)
 #
 # Env: GAME (default ../star-dodger next to this repo), OUT (default ./footage/sd),
 #      GODOT (default godot, 4.5+). On Linux without a display it runs under xvfb-run.
@@ -14,6 +14,7 @@ GODOT="${GODOT:-godot}"
 CLI="$HERE/scripts/inbox.mjs"
 DRIVER="--playmark-driver=$HERE/film/capture.gd"
 FIRST="${1:-m1}"
+LAST="${2:-m4}"
 RUN=()
 if [ "$(uname)" = "Linux" ] && [ -z "${DISPLAY:-}" ]; then RUN=(xvfb-run -a -s "-screen 0 1920x1080x24"); fi
 mkdir -p "$OUT"
@@ -28,7 +29,7 @@ fix() { # sed expression, commit message (skipped if tune.gd already has it)
   sed -i.bak "$1" tune.gd && rm -f tune.gd.bak
   git add tune.gd && git commit -qm "$2" && git log --oneline | head -1
 }
-step() { [[ "$1" > "$FIRST" || "$1" == "$FIRST" ]]; }
+step() { [[ ! "$1" < "$FIRST" && ! "$1" > "$LAST" ]]; }
 
 if step m1; then
   rec m1-mark --film-part=group-mark --film-group=meteor --film-shape=box --film-cat=art \

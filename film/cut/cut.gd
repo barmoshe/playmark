@@ -141,7 +141,7 @@ func _draw() -> void:
 	if s.has("caption"):
 		_caption(str(s.caption), str(s.get("cap", "bottom")))
 	if s.has("kicker"):
-		_kicker(str(s.kicker), str(s.get("label", "")))
+		_kicker(str(s.kicker), str(s.get("label", "")), s.get("kicker_side", "") == "other")
 	# Fade through ink at both ends of every segment.
 	var a := 0.0
 	if seg_t < FADE and seg_i > 0:
@@ -188,8 +188,8 @@ func _fit(t: Texture2D, r: Rect2) -> void:
 func _card(s: Dictionary) -> void:
 	var k := clampf(seg_t / 0.5, 0.0, 1.0)
 	var rise := (1.0 - k) * 24.0
-	var title := str(s.get("title", ""))
-	var sub := str(s.get("sub", ""))
+	var title := _dir(str(s.get("title", "")))
+	var sub := _dir(str(s.get("sub", "")))
 	var fs := int(s.get("size", 120))
 	var tw := _heebo.get_string_size(title, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
 	draw_string(_heebo, Vector2((W - tw) / 2, H / 2 + rise), title, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(PAPER, k))
@@ -207,6 +207,7 @@ func _card(s: Dictionary) -> void:
 
 
 func _caption(text: String, where: String) -> void:
+	text = _dir(text)
 	var fs := 52
 	var tw := _heebo.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
 	var pad := Vector2(34, 22)
@@ -217,11 +218,13 @@ func _caption(text: String, where: String) -> void:
 	draw_string(_heebo, Vector2((W - tw) / 2, box.position.y + pad.y + fs * 0.82), text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, PAPER)
 
 
-func _kicker(num: String, label: String) -> void:
-	# Top corner on the reading side: a number tag and a label.
+func _kicker(num: String, label: String, other_side := false) -> void:
+	label = _dir(label)
+	# Top corner on the reading side (the other side when Playmark's "Fixed" card is there):
+	# a number tag and a label.
 	var fs := 40
 	var lw := _heebo.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
-	var x := W - 70.0 - lw - 130.0 if _rtl else 60.0
+	var x := W - 70.0 - lw - 130.0 if _rtl != other_side else 60.0
 	draw_rect(Rect2(x, 50, 90, 70), ORANGE)
 	var nw := _heebo.get_string_size(num, HORIZONTAL_ALIGNMENT_LEFT, -1, 44).x
 	draw_string(_heebo, Vector2(x + (90 - nw) / 2, 101), num, HORIZONTAL_ALIGNMENT_LEFT, -1, 44, INK)
@@ -230,6 +233,19 @@ func _kicker(num: String, label: String) -> void:
 
 
 func _tag(at: Vector2, text: String, bg: Color, fg: Color) -> void:
+	text = _dir(text)
 	var tw := _heebo.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 44).x
 	draw_rect(Rect2(at, Vector2(tw + 44, 72)), bg)
 	draw_string(_heebo, at + Vector2(22, 52), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 44, fg)
+
+
+## Godot takes a line's direction from its first strong letter, so "Claude מתקן" would be laid
+## out left to right. A right-to-left mark in front makes any line with Hebrew in it RTL.
+func _dir(text: String) -> String:
+	if not _rtl:
+		return text
+	for i in text.length():
+		var c := text.unicode_at(i)
+		if c >= 0x0590 and c <= 0x05FF:
+			return char(0x200F) + text
+	return text
