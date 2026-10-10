@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- New UI sounds: layered (a tone with its own pitch and decay, noise for the attack), 44.1 kHz, every one ending on a fade; the "fixed" chime is a bell arpeggio in a small room. Built on a worker thread with their own seeded RNG, so a game's first frames and its random state are left alone.
+- Showcase videos: the color mark, the Thornback in Wandcraft, and Star Dodger from a blank project, with recording scripts in `film/showcase/`.
+
 ## 0.3.0
 
 - A real example in the README: redesigning an enemy in Wandcraft from one mark, before and after.
