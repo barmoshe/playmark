@@ -1,0 +1,29 @@
+; Engine configuration file.
+config_version=5
+
+[application]
+
+config/name="Playmark Shapes"
+config/version="0.1.0"
+run/main_scene="res://shapes.tscn"
+config/features=PackedStringArray("4.6")
+
+[autoload]
+
+Playmark="*res://addons/playmark/playmark.gd"
+
+[display]
+
+window/size/viewport_width=960
+window/size/viewport_height=540
+window/size/window_width_override=1920
+window/size/window_height_override=1080
+window/stretch/mode="canvas_items"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/playmark/plugin.cfg")
+
+[rendering]
+
+anti_aliasing/quality/msaa_2d=2

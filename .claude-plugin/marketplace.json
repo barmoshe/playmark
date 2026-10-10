@@ -1,0 +1,14 @@
+{
+  "name": "playmark",
+  "description": "Playtest feedback from inside your Godot game, straight to Claude Code.",
+  "owner": {
+    "name": "Bar Moshe"
+  },
+  "plugins": [
+    {
+      "name": "playmark",
+      "description": "Mark what you see while playing your Godot game, write a note, and hand it to Claude Code.",
+      "source": "./"
+    }
+  ]
+}

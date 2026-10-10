@@ -1,0 +1,13 @@
+{
+  "name": "playmark",
+  "displayName": "Playmark",
+  "version": "0.2.0",
+  "description": "Mark what you see while playing your Godot game, write a note, and hand it to Claude Code. Each mark carries the frame, your pins and boxes, the last seconds of play, recent logs and the game's state.",
+  "author": {
+    "name": "Bar Moshe"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/barmoshe/playmark",
+  "repository": "https://github.com/barmoshe/playmark",
+  "keywords": ["godot", "gamedev", "playtest", "feedback", "screenshot", "annotation"]
+}
