@@ -179,6 +179,7 @@ Unity 6000.3.26f1 on a MacBook Pro (Intel, Metal), the toy scene, October 2026.
 | Ghosts and their toggle | ✅ |
 | `inbox.mjs smoke` and `warp --shot` | ✅ smoke on Built-in and URP, warp on Built-in |
 | Old Input Manager, Input System, "Both" | ✅ |
+| Claude Code and Codex: install, triage | ✅ |
 | Overlay colors in Linear-color projects (every URP project) | ❌ drawn washed out; saved images are right ([#2](https://github.com/barmoshe/playmark/issues/2)) |
 | <kbd>⌘</kbd>+<kbd>Enter</kbd> to save on a Mac | ❓ <kbd>Ctrl</kbd>+<kbd>Enter</kbd> works ([#3](https://github.com/barmoshe/playmark/issues/3)) |
 | Windows, Linux, HDRP, Unity 6000.0, Apple silicon, a built player | not yet ([#4](https://github.com/barmoshe/playmark/issues/4)) |
