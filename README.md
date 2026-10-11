@@ -29,7 +29,7 @@ and fixes it. Back in the game, a toast says "Fixed" and a marker stays where yo
 
 ## Watch it work
 
-Three short films, narrated and captioned. Click a frame to play it; each also comes in Hebrew.
+Three short films, narrated and captioned. Click a frame to play it; each also comes in Hebrew. A 45 s [montage across all three games](film/showcase/videos/playmark-montage-en.mp4) (English) is good for sharing.
 
 <table>
 <tr>
