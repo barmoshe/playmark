@@ -134,7 +134,7 @@ static func _flat(bg: Color, border: Color, width := 2, pad := Vector2(14, 8)) -
 
 static func _font_file(rel: String, system_names: PackedStringArray) -> Font:
 	var path := DIR + rel
-	if ResourceLoader.exists(path):
+	if _imported(path):
 		var f = load(path)
 		if f is Font:
 			return f
@@ -147,3 +147,13 @@ static func _font_file(rel: String, system_names: PackedStringArray) -> Font:
 	var sf := SystemFont.new()
 	sf.font_names = system_names
 	return sf
+
+
+## The installer copies the addon's .import files, but a game never opened in the editor has no
+## .godot/imported/ yet: load() would fail and log an error, which became an automatic bug mark.
+static func _imported(path: String) -> bool:
+	var cfg := ConfigFile.new()
+	if cfg.load(path + ".import") != OK:
+		return ResourceLoader.exists(path)
+	var target := str(cfg.get_value("remap", "path", ""))
+	return target != "" and FileAccess.file_exists(target)
