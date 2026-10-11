@@ -48,6 +48,15 @@ function engineLabel(m) {
 }
 
 const isUnity = (project) => fs.existsSync(path.join(project, "ProjectSettings", "ProjectVersion.txt"));
+const isProject = (dir) => isUnity(dir) || fs.existsSync(path.join(dir, "project.godot"));
+
+// Smoke checks a fresh install, before anyone has played: the game's .playmark may not exist yet.
+function projectRoot() {
+  const cwd = process.cwd();
+  const dirs = [cwd, ...fs.readdirSync(cwd, { withFileTypes: true }).filter((e) => e.isDirectory() && !e.name.startsWith(".")).map((e) => path.join(cwd, e.name))];
+  const project = dirs.find(isProject);
+  return project ? path.join(project, ".playmark") : undefined;
+}
 const sleep = (ms) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
 
 // Asks the Unity Editor for a run (warp or smoke) by dropping a request file; Playmark's Editor
@@ -234,8 +243,8 @@ switch (cmd) {
     break;
   }
   case "smoke": {
-    const root = roots[0];
-    if (!root) die("No .playmark folder here. Run /playmark:install first, then play once.");
+    const root = roots[0] ?? projectRoot();
+    if (!root) die("No Godot or Unity project here. Run /playmark:install first.");
     const project = path.dirname(root);
     const out = path.resolve(flag("--out") ?? path.join(root, "smoke"));
     if (isUnity(project)) {

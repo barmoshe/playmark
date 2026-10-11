@@ -36,6 +36,14 @@ test("install is idempotent and keeps existing autoloads", () => {
   assert.equal(fs.readFileSync(path.join(game, ".gitignore"), "utf8"), ".playmark/\n");
 });
 
+test("install --help prints usage and installs nothing", () => {
+  const { game } = fixture();
+  assert.match(run("scripts/install.mjs", ["--help"], game), /Usage: install\.mjs/);
+  assert.ok(!fs.existsSync(path.join(game, "addons")));
+  assert.throws(() => execFileSync("node", [path.join(repo, "scripts/install.mjs"), "--nope"], { cwd: game, stdio: "pipe" }), (e) => e.status === 2);
+  assert.ok(!fs.existsSync(path.join(game, "addons")));
+});
+
 test("notice: silent with nothing, one line per new mark, never repeats", () => {
   const { dir, game } = fixture();
   assert.equal(run("hooks/notice.mjs", [], dir), "");

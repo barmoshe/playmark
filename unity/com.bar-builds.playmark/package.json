@@ -1,6 +1,6 @@
 {
   "name": "com.bar-builds.playmark",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "displayName": "Playmark",
   "description": "Mark what you see while playing your Unity game, write a note, and hand it to Claude Code: the frame, the last seconds of play, the log and the scripts under your pin. Fixes show up in the game.",
   "unity": "6000.0",

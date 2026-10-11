@@ -163,3 +163,10 @@ test("smoke asks Unity for an unattended run", () => {
   assert.match(out, /Smoke run OK/);
   assert.equal(JSON.parse(fs.readFileSync(path.join(requests, "s1.json"), "utf8")).action, "smoke");
 });
+
+test("smoke works on a fresh install, before .playmark exists", () => {
+  const { dir, game } = unityProject();
+  assert.ok(!fs.existsSync(path.join(game, ".playmark")));
+  assert.match(fails("scripts/inbox.mjs", ["smoke"], dir, { PLAYMARK_REQUEST_ID: "s2", PLAYMARK_WAIT_S: "1" }), /Unity isn't open on .*game\./);
+  assert.ok(fs.existsSync(path.join(game, ".playmark", "requests")), "the request went to the project found one level down");
+});

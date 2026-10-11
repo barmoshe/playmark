@@ -1,7 +1,7 @@
 {
   "name": "playmark",
   "displayName": "Playmark",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Mark what you see while playing your Godot or Unity game, write a note, and hand it to Claude Code: the frame, the last seconds of play, the log and the code under your pin. Fixes show up in the game. /playmark:new starts a blank game with it built in.",
   "author": {
     "name": "Bar Moshe"
