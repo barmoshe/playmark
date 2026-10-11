@@ -309,6 +309,10 @@ main > section + section { margin-top: clamp(72px, 9vw, 124px); }
 .copy:hover { border-color: var(--paper); }
 .copy.done { background: var(--paper); color: var(--ink); }
 .reqs { margin-bottom: 14px; }
+.install-cols { display: grid; gap: 8px 40px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); margin-top: 26px; }
+.install-cols h3 { font-size: 1.15rem; margin: 0; }
+.install-cols .cmds { margin-top: 14px; }
+.noagent-title { font-size: 1.15rem; margin: 40px 0 10px; }
 .small-print { color: var(--paper-2); font-size: 0.98rem; margin: 0; max-width: 760px; }
 
 /* Why */

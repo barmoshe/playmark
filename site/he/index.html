@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Playmark: מסמנים תוך כדי משחק, Claude מתקן</title>
-  <meta name="description" content="תוסף ל-Godot ופלאגין ל-Claude Code. לוחצים Ctrl+Shift+M במשחק שרץ, מסמנים מה לא בסדר וכותבים שורה. Claude Code מקבל את הפריים, את חמש השניות האחרונות, את הלוג ואת הקוד שמתחת לסימון.">
+  <title>Playmark: מסמנים תוך כדי משחק, הסוכן מתקן</title>
+  <meta name="description" content="תוסף ל-Godot, חבילה ל-Unity ופלאגין ל-Claude Code ול-Codex. לוחצים Ctrl+Shift+M במשחק שרץ, מסמנים מה לא בסדר וכותבים שורה. הסוכן מקבל את הפריים, את חמש השניות האחרונות, את הלוג ואת הקוד שמתחת לסימון, ומתקן.">
   <link rel="canonical" href="https://playmark.bar-builds.com/he">
   <link rel="alternate" hreflang="en" href="https://playmark.bar-builds.com/">
   <link rel="alternate" hreflang="he" href="https://playmark.bar-builds.com/he">
@@ -15,8 +15,8 @@
   <meta property="og:type" content="website">
   <meta property="og:locale" content="he_IL">
   <meta property="og:url" content="https://playmark.bar-builds.com/he">
-  <meta property="og:title" content="Playmark: מסמנים תוך כדי משחק, Claude מתקן">
-  <meta property="og:description" content="תוסף ל-Godot ופלאגין ל-Claude Code לפידבק תוך כדי משחק. מקפיאים את הפריים, מסמנים, כותבים שורה. Claude מתקן, והמשחק מודיע.">
+  <meta property="og:title" content="Playmark: מסמנים תוך כדי משחק, הסוכן מתקן">
+  <meta property="og:description" content="פידבק מתוך משחק Godot או Unity, ל-Claude Code ול-Codex. מקפיאים את הפריים, מסמנים, כותבים שורה. הסוכן מתקן, והמשחק מודיע.">
   <meta property="og:image" content="https://playmark.bar-builds.com/media/og.png">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="preload" href="/fonts/heebo-hebrew.woff2" as="font" type="font/woff2" crossorigin>
@@ -50,19 +50,19 @@
   <section class="hero wrap" id="top">
     <div class="hero-grid">
       <div class="hero-copy">
-        <p class="kicker">תוסף ל-Godot + פלאגין ל-Claude Code</p>
-        <h1>מסמנים תוך כדי משחק. Claude מתקן.</h1>
+        <p class="kicker">Godot · Unity · Claude Code · Codex</p>
+        <h1>מסמנים תוך כדי משחק. הסוכן מתקן.</h1>
         <div class="cast" aria-hidden="true">
           <span class="toy sun"></span><span class="toy box"></span><span class="toy peak"></span><span class="toy nut"></span>
         </div>
         <p class="deck">לוחצים
           <span class="keys" dir="ltr"><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>M</kbd></span>
-          במשחק Godot שרץ, מסמנים מה לא בסדר וכותבים שורה. Claude Code מקבל את הפריים, את חמש השניות האחרונות, את הלוג ואת הקוד שמתחת לסימון.</p>
+          במשחק Godot או Unity שרץ, מסמנים מה לא בסדר וכותבים שורה. Claude Code או Codex מקבלים את הפריים, את חמש השניות האחרונות, את הלוג ואת הקוד שמתחת לסימון.</p>
         <div class="ctas">
           <a class="btn primary" href="#try">לנסות כאן</a>
           <a class="btn" href="#install">התקנה <span aria-hidden="true">←</span></a>
         </div>
-        <p class="meta"><span data-version>v0.3.0</span><span>Godot 4.5+</span><span>MIT</span><a href="https://github.com/barmoshe/playmark/blob/main/CHANGELOG.md">Changelog</a></p>
+        <p class="meta"><span data-version>v0.3.0</span><span>Godot 4.5+</span><span>Unity 6 בטא</span><span>MIT</span><a href="https://github.com/barmoshe/playmark/blob/main/CHANGELOG.md">Changelog</a></p>
       </div>
       <figure class="frame hero-video">
         <span class="tag">הוקלט ב-Godot</span>
@@ -92,8 +92,8 @@
       </li>
       <li>
         <span class="num" aria-hidden="true">03</span>
-        <h3>Claude מתקן</h3>
-        <p>הפרומפט הבא ב-Claude Code מזכיר את הסימון. <code>/playmark:triage</code> מוצא את הקוד שמתחת לסיכה ומציע תיקון, ובוחרים מה לתקן.</p>
+        <h3>הסוכן מתקן</h3>
+        <p>ב-Claude Code הפרומפט הבא מזכיר את הסימון, וב-Codex מבקשים טריאז'. הסוכן מוצא את הקוד שמתחת לסיכה ומציע תיקון, ובוחרים מה לתקן.</p>
       </li>
       <li>
         <span class="num" aria-hidden="true">04</span>
@@ -222,7 +222,7 @@
 
   <section class="gets wrap" aria-labelledby="gets-title">
     <p class="kicker">הסימון</p>
-    <h2 id="gets-title">מה Claude מקבל</h2>
+    <h2 id="gets-title">מה הסוכן מקבל</h2>
     <p class="deck narrow">כל סימון הוא תיקייה ב-<code>.playmark/inbox</code>, מחוץ ל-git כברירת מחדל. זה הסימון האמיתי מהסרטון.</p>
     <div class="gets-grid">
       <figure class="frame">
@@ -264,36 +264,56 @@
       <li><h3>הקוד שמתחת לסיכה</h3><p>קוליידרים, נודים, סקריפטים ופקדי UI, לכל סיכה ומסגרת.</p></li>
       <li><h3>רוחות</h3><p>סימונים קודמים נשארים בעולם, במקום שבו נעשו. כתום זה פתוח, כחול זה תוקן.</p></li>
       <li><h3>שגיאות מסמנות את עצמן</h3><p>שגיאת סקריפט הופכת לסימון באג, עם הקליפ והלוג.</p></li>
-      <li><h3>חזרה לסימון</h3><p>פותחים את המשחק בדיוק בנקודת הסימון. Claude יכול לצלם פריים ולבדוק את התיקון.</p></li>
+      <li><h3>חזרה לסימון</h3><p>פותחים את המשחק בדיוק בנקודת הסימון. הסוכן יכול לצלם פריים ולבדוק את התיקון.</p></li>
       <li><h3>המצב של המשחק</h3><p>שורה אחת מוסיפה לכל סימון את השחקן, השלב או הציוד.</p></li>
       <li><h3>חד בכל רזולוציה</h3><p>שכבת הסימון היא חלון נפרד, אז גם משחקי פיקסל ארט נקראים טוב.</p></li>
+      <li><h3>שיתוף בלי AI</h3><p>פקודה אחת הופכת את הסימונים לעמוד שכל אחד יכול לפתוח.</p></li>
       <li><h3>רק בבילדים של פיתוח</h3><p>שום דבר לא רץ בגרסת release, אלא אם מפעילים את זה.</p></li>
     </ul>
   </section>
 
   <section class="install wrap" id="install" aria-labelledby="install-title">
     <p class="kicker">התקנה</p>
-    <h2 id="install-title">שלוש פקודות ב-Claude Code</h2>
+    <h2 id="install-title">התקנה ב-Claude Code או ב-Codex</h2>
+    <div class="install-cols">
+      <div>
+        <h3>Claude Code</h3>
+        <ol class="cmds">
+          <li><code data-cmd>/plugin marketplace add barmoshe/playmark</code><button type="button" class="copy" data-copy>העתקה</button></li>
+          <li><code data-cmd>/plugin install playmark@playmark</code><button type="button" class="copy" data-copy>העתקה</button></li>
+          <li><code data-cmd>/playmark:install</code><span class="where">בריפו של המשחק</span><button type="button" class="copy" data-copy>העתקה</button></li>
+        </ol>
+      </div>
+      <div>
+        <h3>Codex</h3>
+        <ol class="cmds">
+          <li><code data-cmd>codex plugin marketplace add barmoshe/playmark</code><button type="button" class="copy" data-copy>העתקה</button></li>
+          <li><code data-cmd>codex plugin add playmark@playmark</code><button type="button" class="copy" data-copy>העתקה</button></li>
+          <li><code data-cmd>Install Playmark in this game</code><span class="where">בריפו של המשחק</span><button type="button" class="copy" data-copy>העתקה</button></li>
+        </ol>
+      </div>
+    </div>
+    <p class="meta reqs"><span>Godot 4.5+ או Unity 6+</span><span>Claude Code או Codex</span><span>Node 18+</span><span>דסקטופ, נבדק על macOS</span></p>
+    <h3 class="noagent-title">בלי סוכן? מסמנים, מייצאים, משתפים</h3>
+    <p class="small-print">מעתיקים את <code>addons/playmark</code> לפרויקט Godot ומפעילים ב-Project Settings, Plugins (ב-Unity: <a href="https://github.com/barmoshe/playmark/blob/main/unity/README.md#install">מוסיפים את החבילה מ-git URL</a>). משחקים ומסמנים כרגיל, ואז הופכים את הסימונים לעמוד אחד שאפשר לפתוח או לשלוח לכל אחד:</p>
     <ol class="cmds">
-      <li><code data-cmd>/plugin marketplace add barmoshe/playmark</code><button type="button" class="copy" data-copy>העתקה</button></li>
-      <li><code data-cmd>/plugin install playmark@playmark</code><button type="button" class="copy" data-copy>העתקה</button></li>
-      <li><code data-cmd>/playmark:install</code><span class="where">בריפו של המשחק</span><button type="button" class="copy" data-copy>העתקה</button></li>
+      <li><code data-cmd>git clone https://github.com/barmoshe/playmark</code><button type="button" class="copy" data-copy>העתקה</button></li>
+      <li><code data-cmd>node playmark/scripts/inbox.mjs export</code><span class="where">בתיקיית המשחק</span><button type="button" class="copy" data-copy>העתקה</button></li>
     </ol>
-    <p class="meta reqs"><span>Godot 4.5+</span><span>Claude Code</span><span>Node 18+</span><span>דסקטופ, נבדק על macOS</span></p>
-    <p class="small-print">בלי Claude Code: מעתיקים את <code>addons/playmark</code> לפרויקט ומפעילים ב-Project Settings, Plugins. עדכונים: <code>claude plugin update playmark</code>.</p>
   </section>
 
   <section class="newgame wrap" id="new" aria-labelledby="new-title">
     <p class="kicker">מאפס</p>
     <h2 id="new-title">להתחיל איתו משחק חדש</h2>
-    <p class="deck narrow">פרויקט Godot ריק עם Playmark כבר בפנים: סצנה אחת שאפשר לשחק, <code>CLAUDE.md</code> שמלמד את הלולאה, וקומיט ראשון. אומרים איזה משחק לבנות, משחקים כל צעד ומסמנים מה לא בסדר.</p>
+    <p class="deck narrow">פרויקט Godot ריק עם Playmark כבר בפנים: סצנה אחת שאפשר לשחק, <code>AGENTS.md</code> שמלמד את הלולאה, וקומיט ראשון. אומרים איזה משחק לבנות, משחקים כל צעד ומסמנים מה לא בסדר.</p>
     <ol class="cmds">
-      <li><code data-cmd>/playmark:new star-dodger --name "Star Dodger"</code><button type="button" class="copy" data-copy>העתקה</button></li>
+      <li><code data-cmd>/playmark:new star-dodger --name "Star Dodger"</code><span class="where">Claude Code</span><button type="button" class="copy" data-copy>העתקה</button></li>
+      <li><code data-cmd>Start a new Playmark game in star-dodger</code><span class="where">Codex</span><button type="button" class="copy" data-copy>העתקה</button></li>
     </ol>
     <ol class="loop-steps">
       <li><strong>בונים צעד.</strong> מכניקה אחת, אויב אחד, מסך אחד.</li>
       <li><strong>משחקים.</strong> <span dir="ltr"><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>M</kbd></span> על מה שלא בסדר.</li>
-      <li><strong>טריאז'.</strong> <code>/playmark:triage</code> מתקן את מה שבוחרים.</li>
+      <li><strong>טריאז'.</strong> <code>/playmark:triage</code>, או מבקשים מ-Codex. הסוכן מתקן את מה שבוחרים.</li>
       <li><strong>קומיט.</strong> ואז הצעד הבא.</li>
     </ol>
     <figure class="frame newgame-video">

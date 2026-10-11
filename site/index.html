@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Playmark: mark it while you play, Claude fixes it</title>
-  <meta name="description" content="A Godot addon and Claude Code plugin. Press Ctrl+Shift+M in your running game, pin what's wrong and write a line. Claude Code gets the frame, the last five seconds, the log and the code under your pin.">
+  <title>Playmark: mark it while you play, your agent fixes it</title>
+  <meta name="description" content="A Godot addon, a Unity package and a plugin for Claude Code and Codex. Press Ctrl+Shift+M in your running game, pin what's wrong and write a line. Your agent gets the frame, the last five seconds, the log and the code under your pin, and fixes it.">
   <link rel="canonical" href="https://playmark.bar-builds.com/">
   <link rel="alternate" hreflang="en" href="https://playmark.bar-builds.com/">
   <link rel="alternate" hreflang="he" href="https://playmark.bar-builds.com/he">
@@ -14,14 +14,14 @@
   <link rel="apple-touch-icon" href="/media/icon-512.png">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://playmark.bar-builds.com/">
-  <meta property="og:title" content="Playmark: mark it while you play, Claude fixes it">
-  <meta property="og:description" content="A Godot addon and Claude Code plugin for playtest feedback. Freeze the frame, pin it, write a line. Claude fixes it, and the game tells you.">
+  <meta property="og:title" content="Playmark: mark it while you play, your agent fixes it">
+  <meta property="og:description" content="Playtest feedback from inside your Godot or Unity game, for Claude Code and Codex. Freeze the frame, pin it, write a line. Your agent fixes it, and the game tells you.">
   <meta property="og:image" content="https://playmark.bar-builds.com/media/og.png">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="preload" href="/fonts/heebo-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/styles.css">
   <script type="application/ld+json">
-  {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Playmark","applicationCategory":"DeveloperApplication","operatingSystem":"macOS, Windows, Linux","softwareVersion":"0.2.0","license":"https://opensource.org/licenses/MIT","url":"https://playmark.bar-builds.com/","codeRepository":"https://github.com/barmoshe/playmark","description":"A Godot addon and Claude Code plugin for playtest feedback.","author":{"@type":"Person","name":"Bar Moshe","url":"https://bar-builds.com"},"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}
+  {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Playmark","applicationCategory":"DeveloperApplication","operatingSystem":"macOS, Windows, Linux","softwareVersion":"0.4.0","license":"https://opensource.org/licenses/MIT","url":"https://playmark.bar-builds.com/","codeRepository":"https://github.com/barmoshe/playmark","description":"A Godot addon and Claude Code plugin for playtest feedback.","author":{"@type":"Person","name":"Bar Moshe","url":"https://bar-builds.com"},"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}
   </script>
 </head>
 <body>
@@ -53,19 +53,19 @@
   <section class="hero wrap" id="top">
     <div class="hero-grid">
       <div class="hero-copy">
-        <p class="kicker">Godot addon + Claude Code plugin</p>
-        <h1>Mark it while you play. Claude fixes it.</h1>
+        <p class="kicker">Godot · Unity · Claude Code · Codex</p>
+        <h1>Mark it while you play. Your agent fixes it.</h1>
         <div class="cast" aria-hidden="true">
           <span class="toy sun"></span><span class="toy box"></span><span class="toy peak"></span><span class="toy nut"></span>
         </div>
         <p class="deck">Press
           <span class="keys"><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>M</kbd></span>
-          in your running Godot game. Pin what's wrong and write a line. Claude Code gets the frame, the last five seconds, the log and the code under your pin.</p>
+          in your running Godot or Unity game. Pin what's wrong and write a line. Claude Code or Codex gets the frame, the last five seconds, the log and the code under your pin.</p>
         <div class="ctas">
           <a class="btn primary" href="#try">Try it here</a>
           <a class="btn" href="#install">Install <span aria-hidden="true">→</span></a>
         </div>
-        <p class="meta"><span data-version>v0.3.0</span><span>Godot 4.5+</span><span>MIT</span><a href="https://github.com/barmoshe/playmark/blob/main/CHANGELOG.md">Changelog</a></p>
+        <p class="meta"><span data-version>v0.3.0</span><span>Godot 4.5+</span><span>Unity 6 beta</span><span>MIT</span><a href="https://github.com/barmoshe/playmark/blob/main/CHANGELOG.md">Changelog</a></p>
       </div>
       <figure class="frame hero-video">
         <span class="tag">Recorded in Godot</span>
@@ -96,8 +96,8 @@
       </li>
       <li>
         <span class="num" aria-hidden="true">03</span>
-        <h3>Claude fixes</h3>
-        <p>Your next prompt in Claude Code mentions the mark. <code>/playmark:triage</code> finds the code under your pin and proposes a fix. You say which.</p>
+        <h3>Your agent fixes</h3>
+        <p>Claude Code mentions new marks on your next prompt; in Codex, ask it to triage. It finds the code under your pin and proposes a fix. You say which.</p>
       </li>
       <li>
         <span class="num" aria-hidden="true">04</span>
@@ -226,10 +226,10 @@
     </figure>
   </section>
 
-  <!-- What Claude gets -->
+  <!-- What the agent gets -->
   <section class="gets wrap" aria-labelledby="gets-title">
     <p class="kicker">The mark</p>
-    <h2 id="gets-title">What Claude gets</h2>
+    <h2 id="gets-title">What your agent gets</h2>
     <p class="deck narrow">Every mark is a folder in <code>.playmark/inbox</code>, git-ignored by default. This is the real one from the video.</p>
     <div class="gets-grid">
       <figure class="frame">
@@ -272,9 +272,10 @@
       <li><h3>The code under your pin</h3><p>Colliders, nodes, scripts and UI controls, per pin and box.</p></li>
       <li><h3>Ghosts</h3><p>Past marks stay in the world where you made them. Orange is open, blue is fixed.</p></li>
       <li><h3>Errors mark themselves</h3><p>A script error becomes a bug mark, with the clip and the log.</p></li>
-      <li><h3>Warp back</h3><p>Open the game at a mark. Claude can grab a frame to check its fix.</p></li>
+      <li><h3>Warp back</h3><p>Open the game at a mark. The agent can grab a frame to check its fix.</p></li>
       <li><h3>Your game's state</h3><p>One line adds the player, the level or the loadout to every mark.</p></li>
       <li><h3>Sharp at any resolution</h3><p>The overlay is its own window, so pixel-art games read fine.</p></li>
+      <li><h3>Share without AI</h3><p>One command turns the marks into a page anyone can open.</p></li>
       <li><h3>Dev builds only</h3><p>Nothing runs in a release export unless you turn it on.</p></li>
     </ul>
   </section>
@@ -282,28 +283,47 @@
   <!-- Install -->
   <section class="install wrap" id="install" aria-labelledby="install-title">
     <p class="kicker">Install</p>
-    <h2 id="install-title">Three commands in Claude Code</h2>
+    <h2 id="install-title">Install in Claude Code or Codex</h2>
+    <div class="install-cols">
+      <div>
+        <h3>Claude Code</h3>
+        <ol class="cmds">
+          <li><code data-cmd>/plugin marketplace add barmoshe/playmark</code><button type="button" class="copy" data-copy>Copy</button></li>
+          <li><code data-cmd>/plugin install playmark@playmark</code><button type="button" class="copy" data-copy>Copy</button></li>
+          <li><code data-cmd>/playmark:install</code><span class="where">in your game's repo</span><button type="button" class="copy" data-copy>Copy</button></li>
+        </ol>
+      </div>
+      <div>
+        <h3>Codex</h3>
+        <ol class="cmds">
+          <li><code data-cmd>codex plugin marketplace add barmoshe/playmark</code><button type="button" class="copy" data-copy>Copy</button></li>
+          <li><code data-cmd>codex plugin add playmark@playmark</code><button type="button" class="copy" data-copy>Copy</button></li>
+          <li><code data-cmd>Install Playmark in this game</code><span class="where">in your game's repo</span><button type="button" class="copy" data-copy>Copy</button></li>
+        </ol>
+      </div>
+    </div>
+    <p class="meta reqs"><span>Godot 4.5+ or Unity 6+</span><span>Claude Code or Codex</span><span>Node 18+</span><span>Desktop, tested on macOS</span></p>
+    <h3 class="noagent-title">No agent? Mark, export, share</h3>
+    <p class="small-print">Copy <code>addons/playmark</code> into a Godot project and enable it in Project Settings, Plugins (Unity: <a href="https://github.com/barmoshe/playmark/blob/main/unity/README.md#install">add the package by git URL</a>). Play and mark as usual, then turn the marks into one page you can open or send to anyone:</p>
     <ol class="cmds">
-      <li><code data-cmd>/plugin marketplace add barmoshe/playmark</code><button type="button" class="copy" data-copy>Copy</button></li>
-      <li><code data-cmd>/plugin install playmark@playmark</code><button type="button" class="copy" data-copy>Copy</button></li>
-      <li><code data-cmd>/playmark:install</code><span class="where">in your game's repo</span><button type="button" class="copy" data-copy>Copy</button></li>
+      <li><code data-cmd>git clone https://github.com/barmoshe/playmark</code><button type="button" class="copy" data-copy>Copy</button></li>
+      <li><code data-cmd>node playmark/scripts/inbox.mjs export</code><span class="where">in your game's folder</span><button type="button" class="copy" data-copy>Copy</button></li>
     </ol>
-    <p class="meta reqs"><span>Godot 4.5+</span><span>Claude Code</span><span>Node 18+</span><span>Desktop, tested on macOS</span></p>
-    <p class="small-print">Without Claude Code, copy <code>addons/playmark</code> into your project and enable it in Project Settings, Plugins. Updates: <code>claude plugin update playmark</code>.</p>
   </section>
 
   <!-- Start a new game -->
   <section class="newgame wrap" id="new" aria-labelledby="new-title">
     <p class="kicker">From nothing</p>
     <h2 id="new-title">Start a new game with it</h2>
-    <p class="deck narrow">A blank Godot project with Playmark already in it: one playable scene, a <code>CLAUDE.md</code> that teaches the loop, and a first commit. Say what game to build, play each step, mark what's off.</p>
+    <p class="deck narrow">A blank Godot project with Playmark already in it: one playable scene, an <code>AGENTS.md</code> that teaches the loop, and a first commit. Say what game to build, play each step, mark what's off.</p>
     <ol class="cmds">
-      <li><code data-cmd>/playmark:new star-dodger --name "Star Dodger"</code><button type="button" class="copy" data-copy>Copy</button></li>
+      <li><code data-cmd>/playmark:new star-dodger --name "Star Dodger"</code><span class="where">Claude Code</span><button type="button" class="copy" data-copy>Copy</button></li>
+      <li><code data-cmd>Start a new Playmark game in star-dodger</code><span class="where">Codex</span><button type="button" class="copy" data-copy>Copy</button></li>
     </ol>
     <ol class="loop-steps">
       <li><strong>Build a step.</strong> One mechanic, one enemy, one screen.</li>
       <li><strong>Play it.</strong> <kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>M</kbd> on whatever is off.</li>
-      <li><strong>Triage.</strong> <code>/playmark:triage</code> fixes what you pick.</li>
+      <li><strong>Triage.</strong> <code>/playmark:triage</code>, or ask Codex. It fixes what you pick.</li>
       <li><strong>Commit.</strong> Then the next step.</li>
     </ol>
     <figure class="frame newgame-video">
