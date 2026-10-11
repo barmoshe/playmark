@@ -20,7 +20,9 @@ const fails = (script, args, cwd, env = {}) => {
 };
 
 function unityProject(version = "6000.0.84f1") {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "playmark-unity-"));
+  // The real path: on macOS the temp dir is a /var -> /private/var symlink, and inbox.mjs
+  // reports resolved paths.
+  const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "playmark-unity-")));
   const game = path.join(dir, "game");
   fs.mkdirSync(path.join(game, "Assets"), { recursive: true });
   fs.mkdirSync(path.join(game, "ProjectSettings"));
