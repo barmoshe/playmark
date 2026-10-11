@@ -135,6 +135,18 @@ public class InboxTests : IDisposable
     }
 
     [Fact]
+    public void ShortNumbersAreMarkNumbersNotIdTails()
+    {
+        Save("20261011-120000-aaa2", 1);
+        Save("20261011-120100-bbbb", 2);
+        var inbox = new Inbox(_root);
+        inbox.Poll(true, out _);
+        Assert.Equal(2, inbox.Find("2").Seq); // not the id that ends in "2"
+        Assert.Null(inbox.Find("7"));
+        Assert.Equal(1, inbox.Find("aaa2").Seq);
+    }
+
+    [Fact]
     public void ForgetsDeletedMarks()
     {
         Save("20261011-120000-aaaa", 1);
@@ -188,6 +200,24 @@ public class InboxTests : IDisposable
         Assert.Equal(true, res["ok"]);
         Assert.Equal("/tmp/shot.png", res["shot"]);
         Assert.False(File.Exists(Path.Combine(Requests.Dir(_root), "r1.taken")));
+    }
+
+    [Fact]
+    public void StaleRequestsAreAnsweredNotRun()
+    {
+        var dir = Requests.Dir(_root);
+        Directory.CreateDirectory(dir);
+        var old = Path.Combine(dir, "old.json");
+        File.WriteAllText(old, "{\"action\": \"smoke\"}");
+        File.SetLastWriteTimeUtc(old, DateTime.UtcNow.AddHours(-3));
+        File.WriteAllText(Path.Combine(dir, "fresh.json"), "{\"action\": \"smoke\"}");
+        File.WriteAllText(Path.Combine(dir, "fresh.taken"), "{}"); // left by a crashed run with the same id
+        var r = Requests.ClaimNext(_root);
+        Assert.Equal("fresh", r["id"]);
+        var expired = Json.TryParseObject(File.ReadAllText(Path.Combine(dir, "old.result.json")));
+        Assert.Equal(false, expired["ok"]);
+        Assert.Contains("expired", (string)expired["error"]);
+        Assert.False(File.Exists(old));
     }
 }
 
@@ -303,7 +333,8 @@ public class ImageTests
         Assert.True(RgbaImage.LooksFlipped(shot, frame));
         var flat = new RgbaImage(16, 9);
         flat.Fill(RgbaImage.Blue);
-        Assert.False(RgbaImage.LooksFlipped(flat, flat.Clone())); // nothing to tell apart: keep as is
+        Assert.Null(RgbaImage.Orientation(flat, flat.Clone())); // nothing to tell apart: ask again later
+        Assert.False(RgbaImage.LooksFlipped(flat, flat.Clone()));
     }
 
     [Fact]

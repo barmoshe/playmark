@@ -46,6 +46,7 @@ namespace BarBuilds.Playmark
         Vector2? _dragFrom;
         Vector2 _dragTo;
         bool _focusNote;
+        bool _caretToEnd;
         string _state = "open"; // open, saving, saved, failed
         float _stateAt;
         Rect _frameRect;
@@ -138,6 +139,7 @@ namespace BarBuilds.Playmark
             {
                 GUI.FocusControl(NoteControl);
                 _focusNote = false;
+                _caretToEnd = true;
             }
         }
 
@@ -414,6 +416,15 @@ namespace BarBuilds.Playmark
             GUI.enabled = !Busy;
             Note = GUI.TextArea(noteRect, Note, 500, Brand.NoteField());
             GUI.enabled = true;
+            // A field that just took focus puts the caret at the start (or selects all): typing
+            // that started outside it must carry on at the end.
+            if (_caretToEnd && GUI.GetNameOfFocusedControl() == NoteControl && GUIUtility.keyboardControl != 0)
+            {
+                var editor = (TextEditor)GUIUtility.GetStateObject(typeof(TextEditor), GUIUtility.keyboardControl);
+                editor.text = Note;
+                editor.MoveTextEnd();
+                _caretToEnd = false;
+            }
             if (Note != before)
             {
                 _sfx?.Key(Note.Length < before.Length);

@@ -58,11 +58,18 @@ test("install embeds the Unity package, idempotently, and ignores .playmark/", (
   assert.equal(fs.readFileSync(path.join(game, ".gitignore"), "utf8"), ".playmark/\n");
 });
 
-test("install --git pins the package to this plugin's tag and drops an embedded copy", () => {
+test("install --git pins the package to this plugin's tag, once a release has it", () => {
   const { dir, game } = unityProject();
   run("scripts/install.mjs", [game], dir);
-  run("scripts/install.mjs", [game, "--git"], dir);
   const version = JSON.parse(fs.readFileSync(path.join(repo, ".claude-plugin", "plugin.json"), "utf8")).version;
+  const [major, minor] = version.split(".").map(Number);
+  if (major === 0 && minor < 4) {
+    // No tag before 0.4.0 has unity/: refuse rather than write a URL UPM can't resolve.
+    assert.match(fails("scripts/install.mjs", [game, "--git"], dir), /--git needs a release with the Unity package/);
+    assert.ok(fs.existsSync(path.join(game, "Packages", "com.bar-builds.playmark", "package.json")));
+    return;
+  }
+  run("scripts/install.mjs", [game, "--git"], dir);
   const manifest = JSON.parse(fs.readFileSync(path.join(game, "Packages", "manifest.json"), "utf8"));
   assert.equal(manifest.dependencies["com.bar-builds.playmark"], `https://github.com/barmoshe/playmark.git?path=/unity/com.bar-builds.playmark#v${version}`);
   assert.ok(!fs.existsSync(path.join(game, "Packages", "com.bar-builds.playmark")));
@@ -96,7 +103,7 @@ test("warp asks the Unity Editor through a request file and waits for the shot",
 
   // Without --shot: the request is left for the Editor, nothing waits.
   const asked = run("scripts/inbox.mjs", ["warp", "1"], dir, { PLAYMARK_REQUEST_ID: "w1" });
-  assert.match(asked, /Unity doesn't look open/);
+  assert.match(asked, /Unity isn't open/);
   const req = JSON.parse(fs.readFileSync(path.join(requests, "w1.json"), "utf8"));
   assert.deepEqual({ id: req.id, action: req.action, mark: req.mark }, { id: "w1", action: "warp", mark: "20261011-120000-aaaa" });
 
@@ -106,8 +113,27 @@ test("warp asks the Unity Editor through a request file and waits for the shot",
   fs.writeFileSync(path.join(requests, "w2.result.json"), JSON.stringify({ id: "w2", ok: true, shot: "/tmp/after.png" }));
   const out = run("scripts/inbox.mjs", ["warp", "aaaa", "--shot", "/tmp/after.png"], dir, { PLAYMARK_REQUEST_ID: "w2" });
   assert.match(out, /\/tmp\/after\.png/);
-  assert.doesNotMatch(out, /doesn't look open/);
+  assert.doesNotMatch(out, /isn't open/);
   assert.equal(JSON.parse(fs.readFileSync(path.join(requests, "w2.json"), "utf8")).shot, "/tmp/after.png");
+  assert.ok(!fs.existsSync(path.join(requests, "w2.result.json")), "the answer is cleared once read");
+});
+
+test("a waiting run doesn't block when Unity is closed, and leaves nothing behind", () => {
+  const { dir, game } = unityProject();
+  unityMark(game, "20261011-120000-aaaa");
+  assert.match(fails("scripts/inbox.mjs", ["warp", "1", "--shot", "x.png"], dir, { PLAYMARK_REQUEST_ID: "w5" }), /Unity isn't open/);
+  assert.ok(!fs.existsSync(path.join(game, ".playmark", "requests", "w5.json")));
+});
+
+test("warp with a Development Build passes the inbox and the game's args", () => {
+  const { dir, game } = unityProject();
+  unityMark(game, "20261011-120000-aaaa", { warp: { scene: "Assets/PlaymarkToy.unity", data: { args: ["-level=3"] } } });
+  const player = path.join(dir, "player.sh");
+  const record = path.join(dir, "args.txt");
+  fs.writeFileSync(player, `#!/bin/sh\nprintf '%s\\n' "$@" > '${record}'\n`, { mode: 0o755 });
+  run("scripts/inbox.mjs", ["warp", "1", "--shot", path.join(dir, "s.png")], dir, { PLAYMARK_UNITY_PLAYER: player });
+  const args = fs.readFileSync(record, "utf8").trim().split("\n");
+  assert.deepEqual(args, ["-level=3", `-playmark-dir=${path.join(game, ".playmark")}`, "-playmark-warp=20261011-120000-aaaa", `-playmark-shot=${path.join(dir, "s.png")}`]);
 });
 
 test("warp reports the Editor's error, and times out when nobody answers", () => {
@@ -115,9 +141,12 @@ test("warp reports the Editor's error, and times out when nobody answers", () =>
   unityMark(game, "20261011-120000-aaaa");
   const requests = path.join(game, ".playmark", "requests");
   fs.mkdirSync(requests, { recursive: true });
+  fs.mkdirSync(path.join(game, "Temp"));
+  fs.writeFileSync(path.join(game, "Temp", "UnityLockfile"), "");
   fs.writeFileSync(path.join(requests, "w3.result.json"), JSON.stringify({ id: "w3", ok: false, error: "The open scene has unsaved changes." }));
   assert.match(fails("scripts/inbox.mjs", ["warp", "1", "--shot", "x.png"], dir, { PLAYMARK_REQUEST_ID: "w3" }), /unsaved changes/);
-  assert.match(fails("scripts/inbox.mjs", ["warp", "1", "--shot", "x.png"], dir, { PLAYMARK_REQUEST_ID: "w4", PLAYMARK_WAIT_S: "1" }), /No answer from Unity after 1 s/);
+  assert.match(fails("scripts/inbox.mjs", ["warp", "1", "--shot", "x.png"], dir, { PLAYMARK_REQUEST_ID: "w4", PLAYMARK_WAIT_S: "1" }), /No answer from Unity after 1 s, so the request was withdrawn/);
+  assert.ok(!fs.existsSync(path.join(requests, "w4.json")), "an unanswered request is withdrawn");
 });
 
 test("smoke asks Unity for an unattended run", () => {
@@ -125,6 +154,8 @@ test("smoke asks Unity for an unattended run", () => {
   unityMark(game, "20261011-120000-aaaa");
   const requests = path.join(game, ".playmark", "requests");
   fs.mkdirSync(requests, { recursive: true });
+  fs.mkdirSync(path.join(game, "Temp"));
+  fs.writeFileSync(path.join(game, "Temp", "UnityLockfile"), "");
   fs.writeFileSync(path.join(requests, "s1.result.json"), JSON.stringify({ id: "s1", ok: true }));
   const out = run("scripts/inbox.mjs", ["smoke"], game, { PLAYMARK_REQUEST_ID: "s1" });
   assert.match(out, /Smoke run OK/);

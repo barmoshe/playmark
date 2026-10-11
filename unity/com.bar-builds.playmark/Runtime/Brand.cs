@@ -231,7 +231,11 @@ namespace BarBuilds.Playmark
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void ResetStatics()
         {
-            // Styles hold textures that may not survive leaving Play Mode: rebuild per session.
+            // Styles hold textures that may not survive leaving Play Mode: rebuild per session,
+            // and free the old ones (they are HideAndDontSave, so nothing else would).
+            foreach (var t in Boxes.Values) if (t != null) UnityEngine.Object.DestroyImmediate(t);
+            if (_white != null) UnityEngine.Object.DestroyImmediate(_white);
+            if (_disc != null) UnityEngine.Object.DestroyImmediate(_disc);
             Styles.Clear();
             Boxes.Clear();
             Fonts.Clear();

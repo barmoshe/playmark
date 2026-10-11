@@ -9,7 +9,8 @@
 //   inbox.mjs warp <id> [--shot out.png] open the game at the mark; with --shot, save a frame and quit
 //   inbox.mjs smoke [--out dir]         an unattended run: play, mark, save, stop (checks an install)
 // Unity: warp and smoke ask the open Editor through .playmark/requests/ (Playmark's Editor
-// script enters Play Mode for them). $PLAYMARK_UNITY_PLAYER runs a Development Build instead.
+// script enters Play Mode for them). For warp, $PLAYMARK_UNITY_PLAYER runs a Development
+// Build instead (smoke always goes through the Editor).
 // <id> is the mark's number (14 or #14), its full id, or the id's last 4 characters.
 import fs from "node:fs";
 import path from "node:path";
@@ -59,24 +60,38 @@ function unityRequest(root, request, wait) {
   const resultFile = path.join(dir, `${id}.result.json`);
   if (!process.env.PLAYMARK_REQUEST_ID) fs.rmSync(resultFile, { force: true });
   fs.writeFileSync(path.join(dir, `${id}.json`), JSON.stringify({ id, ...request }, null, 2) + "\n");
+  const requestFile = path.join(dir, `${id}.json`);
   if (!fs.existsSync(path.join(project, "Temp", "UnityLockfile"))) {
     const unity = process.env.PLAYMARK_UNITY;
     if (unity) {
       spawn(unity, ["-projectPath", project], { detached: true, stdio: "ignore" }).unref();
       console.log(`Starting Unity on ${project}; it runs the request once the project is open.`);
+    } else if (wait) {
+      // Nothing would answer: don't block, and don't leave a run behind for later.
+      fs.rmSync(requestFile, { force: true });
+      die(`Unity isn't open on ${project}. Open the project in Unity and run this again (or set $PLAYMARK_UNITY to the Unity binary to start it from here).`);
     } else {
-      console.log(`Unity doesn't look open on ${project}. Open it there: the request waits in ${dir}. (Set $PLAYMARK_UNITY to the Unity binary to start it from here.)`);
+      console.log(`Unity isn't open on ${project}. The request waits in ${dir} for up to 10 minutes; open the project in Unity.`);
     }
   }
   if (!wait) {
     console.log(`Asked Unity for ${request.action} (${id}). It enters Play Mode once any playtest in progress ends.`);
     return;
   }
-  const timeout = Number(process.env.PLAYMARK_WAIT_S || 300) * 1000;
+  // Under Claude Code's 2-minute command limit by default.
+  const timeout = Number(process.env.PLAYMARK_WAIT_S || 110) * 1000;
   const until = Date.now() + timeout;
   while (!fs.existsSync(resultFile) && Date.now() < until) sleep(500);
-  if (!fs.existsSync(resultFile)) die(`No answer from Unity after ${timeout / 1000} s. Is the project open, with no playtest running? The request is ${path.join(dir, id + ".json")}.`);
+  if (!fs.existsSync(resultFile)) {
+    // Still unclaimed: withdraw it, so it can't start Play Mode later on its own.
+    const withdrawn = fs.existsSync(requestFile);
+    fs.rmSync(requestFile, { force: true });
+    die(withdrawn
+      ? `No answer from Unity after ${timeout / 1000} s, so the request was withdrawn. Is a playtest running, or a script still compiling? Stop it and run this again.`
+      : `Unity took the request but hasn't answered after ${timeout / 1000} s (still entering Play Mode?). The result will land in ${resultFile}.`);
+  }
   const result = JSON.parse(fs.readFileSync(resultFile, "utf8"));
+  fs.rmSync(resultFile, { force: true });
   if (!result.ok) die(`Unity: ${result.error ?? "the run failed"}`);
   return result;
 }
@@ -148,10 +163,16 @@ switch (cmd) {
     }
     if (isUnity(project)) {
       // A Development Build: the same flags, read from its command line.
+      // The build keeps its own marks elsewhere: point it at this inbox, and pass the game's warp args.
       const player = process.env.PLAYMARK_UNITY_PLAYER;
-      const args = [`-playmark-warp=${m.id}`, ...(shotPath ? [`-playmark-shot=${path.resolve(shotPath)}`] : [])];
+      const gameArgs = Array.isArray(m.warp?.data?.args) ? m.warp.data.args.map(String) : [];
+      const args = [...gameArgs, `-playmark-dir=${root}`, `-playmark-warp=${m.id}`, ...(shotPath ? [`-playmark-shot=${path.resolve(shotPath)}`] : [])];
       if (shotPath) {
-        execFileSync(player, args, { stdio: "inherit", timeout: 120000 });
+        try {
+          execFileSync(player, args, { stdio: "inherit", timeout: 110000 });
+        } catch {
+          die(`The build exited with an error (${player} ${args.join(" ")}). Its log says why.`);
+        }
         console.log(path.resolve(shotPath));
       } else {
         spawn(player, args, { detached: true, stdio: "ignore" }).unref();

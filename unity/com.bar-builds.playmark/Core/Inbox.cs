@@ -171,11 +171,15 @@ namespace BarBuilds.Playmark.Core
         public KnownMark Find(string reference)
         {
             if (string.IsNullOrEmpty(reference)) return null;
+            // A short number is a mark number (#14), as in inbox.mjs; anything else is an id or its tail.
             var r = reference.TrimStart('#');
-            foreach (var m in _known.Values)
+            if (r.Length <= 4 && long.TryParse(r, NumberStyles.None, CultureInfo.InvariantCulture, out var seq))
             {
-                if (m.Id == reference || m.Id.EndsWith(reference, StringComparison.Ordinal) || m.Seq.ToString(CultureInfo.InvariantCulture) == r) return m;
+                foreach (var m in _known.Values) if (m.Seq == seq) return m;
+                return null;
             }
+            foreach (var m in _known.Values)
+                if (m.Id == reference || m.Id.EndsWith(reference, StringComparison.Ordinal)) return m;
             return null;
         }
 

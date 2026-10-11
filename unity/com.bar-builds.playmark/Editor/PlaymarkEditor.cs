@@ -21,6 +21,7 @@ namespace BarBuilds.Playmark.EditorTools
     internal static class PlaymarkEditor
     {
         const string RequestKey = "Playmark.Request";
+        const string StartedKey = "Playmark.RequestStarted";
         static double _nextPoll;
 
         static PlaymarkEditor()
@@ -63,10 +64,48 @@ namespace BarBuilds.Playmark.EditorTools
             _nextPoll = EditorApplication.timeSinceStartup + 0.5;
             // A playtest in progress is the player's: requests wait until it ends.
             if (EditorApplication.isCompiling || EditorApplication.isUpdating || EditorApplication.isPlayingOrWillChangePlaymode) return;
+            if (FailUntakenRequest()) return;
+            if (!Waiting()) return;
+            // Claude's edits may not be imported yet while Unity sits in the background.
+            AssetDatabase.Refresh();
+            if (EditorApplication.isCompiling) return; // claim it once the scripts are built
             Dictionary<string, object> req;
             try { req = Requests.ClaimNext(Root); }
             catch (IOException) { return; }
-            if (req != null) Start(req);
+            if (req == null) return;
+            if (EditorUtility.scriptCompilationFailed)
+            {
+                Requests.WriteResult(Root, Json.Str(req, "id"), false, null, "Unity has script compile errors, so it can't enter Play Mode. Fix them (see the Console), then run it again.");
+                return;
+            }
+            Start(req);
+        }
+
+        static bool Waiting()
+        {
+            var dir = Requests.Dir(Root);
+            if (!Directory.Exists(dir)) return false;
+            foreach (var f in Directory.GetFiles(dir, "*.json"))
+                if (!f.EndsWith(".result.json", StringComparison.Ordinal)) return true;
+            return false;
+        }
+
+        /// <summary>
+        /// A request Play Mode never took (it refused to start, or Playmark is turned off): answer
+        /// it as failed rather than replaying it the next time someone presses Play.
+        /// </summary>
+        static bool FailUntakenRequest()
+        {
+            var pending = SessionState.GetString(RequestKey, "");
+            if (pending.Length == 0) return false;
+            if (EditorApplication.timeSinceStartup - SessionState.GetFloat(StartedKey, 0f) < 5) return true;
+            SessionState.EraseString(RequestKey);
+            var req = Json.TryParseObject(pending);
+            var why = EditorUtility.scriptCompilationFailed
+                ? "Unity has script compile errors, so it can't enter Play Mode. Fix them (see the Console), then run it again."
+                : "Play Mode didn't run the request. Is Playmark turned off in Project Settings, Playmark?";
+            Requests.WriteResult(Root, Json.Str(req, "id"), false, null, why);
+            return true;
         }
 
         static void Start(Dictionary<string, object> req)
@@ -108,6 +147,7 @@ namespace BarBuilds.Playmark.EditorTools
             }
             Debug.Log("Playmark: " + action + " requested from Claude Code, entering Play Mode");
             SessionState.SetString(RequestKey, Json.Write(req, false));
+            SessionState.SetFloat(StartedKey, (float)EditorApplication.timeSinceStartup);
             EditorApplication.EnterPlaymode();
         }
 

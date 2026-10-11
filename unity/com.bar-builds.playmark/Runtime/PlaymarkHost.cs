@@ -53,7 +53,8 @@ namespace BarBuilds.Playmark
         Session _session;
         Shortcut _shortcut, _ghostKey;
         string _root;
-        bool _hideGui, _opening, _busy;
+        // Not serialized: a script reload mid-Play must not restore a stuck flag.
+        [NonSerialized] bool _hideGui, _opening, _busy;
         float _nextPoll, _nextSceneCheck, _fps = 60f;
         string _scenePath, _scope = "";
         int _savedThisSession, _autoMarks;
@@ -111,6 +112,7 @@ namespace BarBuilds.Playmark
         void Init()
         {
             Instance = this;
+            _hideGui = _opening = _busy = false;
             _settings = PlaymarkSettings.Current;
             if (_log == null)
             {
@@ -152,6 +154,8 @@ namespace BarBuilds.Playmark
 
         static string OutputRoot(PlaymarkSettings s)
         {
+            // inbox.mjs runs a build with -playmark-dir=<project>/.playmark, so warp finds the mark.
+            if (CommandLine().TryGetValue("playmark-dir", out var dir) && dir.Length > 0) return Path.GetFullPath(dir);
             if (Application.isEditor) return Path.GetFullPath(Path.Combine(Application.dataPath, "..", string.IsNullOrEmpty(s.outputDir) ? ".playmark" : s.outputDir));
             return Path.Combine(Application.persistentDataPath, "playmark");
         }
@@ -266,7 +270,12 @@ namespace BarBuilds.Playmark
         /// <summary>Freezes the game and opens the overlay at the end of this frame.</summary>
         public void Open()
         {
-            if (_inbox == null || _overlay != null || _opening || _busy) return;
+            if (_inbox == null || _overlay != null || _opening) return;
+            if (_busy)
+            {
+                _hud.ShowToast("saved", "One moment", "Still saving the last mark", "", 1.6f);
+                return;
+            }
             _opening = true;
             _session = new Session
             {
@@ -300,19 +309,31 @@ namespace BarBuilds.Playmark
                 Close();
                 yield break;
             }
-            _session.Shot = tex;
-            _session.ShotImage = img;
-            _session.Frames = _capture.Read(img, Time.realtimeSinceStartup);
-            var counts = _inbox.Counts();
-            _overlay = new Overlay(tex, _session.Frames, new Overlay.Info
+            try
             {
-                Seq = _session.Seq,
-                Scene = SceneManager.GetActiveScene().path,
-                Fps = Mathf.RoundToInt(_session.Fps),
-                Session = _savedThisSession,
-                Inbox = counts.open,
-                Fixed = counts.fixedCount,
-            }, _sfx);
+                _session.Shot = tex;
+                _session.ShotImage = img;
+                _session.Frames = _capture.Read(img, Time.realtimeSinceStartup);
+                var counts = _inbox.Counts();
+                _overlay = new Overlay(tex, _session.Frames, new Overlay.Info
+                {
+                    Seq = _session.Seq,
+                    Scene = SceneManager.GetActiveScene().path,
+                    Fps = Mathf.RoundToInt(_session.Fps),
+                    Session = _savedThisSession,
+                    Inbox = counts.open,
+                    Fixed = counts.fixedCount,
+                }, _sfx);
+            }
+            catch (Exception e)
+            {
+                // Never leave the game frozen behind an overlay that didn't open.
+                Debug.LogError("Playmark: the overlay could not open: " + e);
+                _opening = false;
+                _overlay = null;
+                Close();
+                yield break;
+            }
             _overlay.Submitted += OnSubmitted;
             _overlay.Cancelled += Close;
             _overlay.Finished += Close;
@@ -354,11 +375,21 @@ namespace BarBuilds.Playmark
             if (s == null) return;
             var image = frameIndex < 0 ? s.ShotImage : s.Frames[frameIndex].Image;
             var offset = frameIndex < 0 ? 0f : s.Frames[frameIndex].Offset;
-            Save(image, s.Frames, marks, note, category, offset, "player", s.Seq, s.Time, s.Mouse, s.Fps, s.TimeScale, ok =>
+            try
             {
-                if (ok) _savedThisSession++;
-                _overlay?.Finish(ok);
-            });
+                Save(image, s.Frames, marks, note, category, offset, "player", s.Seq, s.Time, s.Mouse, s.Fps, s.TimeScale, ok =>
+                {
+                    if (ok) _savedThisSession++;
+                    _overlay?.Finish(ok);
+                });
+            }
+            catch (Exception e)
+            {
+                // The overlay shows "not saved" and closes; the game gets its time back.
+                Debug.LogError("Playmark: the mark was not saved: " + e);
+                _busy = false;
+                _overlay?.Finish(false);
+            }
         }
 
         void Save(RgbaImage image, List<ClipFrame> frames, List<NormMark> marks, string note, string category, float offset, string source,
@@ -462,8 +493,9 @@ namespace BarBuilds.Playmark
         /// <summary>The first error of its kind (3 a session at most) becomes a bug mark by itself.</summary>
         void AutoMark(string err)
         {
-            if (!_settings.autoOnError || _autoMarks >= MaxAutoMarks || _busy) return;
+            if (!_settings.autoOnError || _autoMarks >= MaxAutoMarks || _busy || _opening) return;
             _autoMarks++;
+            _busy = true; // so the shortcut in this same frame can't take the same #seq
             StartCoroutine(AutoMarkAtEndOfFrame(err));
         }
 
@@ -473,16 +505,30 @@ namespace BarBuilds.Playmark
             yield return new WaitForEndOfFrame();
             var (tex, img) = Capture.Freeze();
             _hideGui = false;
-            if (tex == null) yield break;
-            var frames = _capture.Read(img, Time.realtimeSinceStartup);
-            var seq = _inbox.NextSeq();
-            Save(img, frames, new List<NormMark>(), "Auto: " + err, "bug", 0f, "auto-error", seq, DateTime.Now, _mouse, _fps, Time.timeScale, ok =>
+            if (tex == null)
             {
-                DestroyTextures(tex, frames);
-                if (!ok) return;
-                _sfx.Play("tick", 0.7f);
-                _hud.ShowToast("error", "Saved as #" + seq, err, "BUG MARK · CLIP + LOG ATTACHED");
-            });
+                _busy = false;
+                yield break;
+            }
+            var frames = new List<ClipFrame>();
+            try
+            {
+                frames = _capture.Read(img, Time.realtimeSinceStartup);
+                var seq = _inbox.NextSeq();
+                Save(img, frames, new List<NormMark>(), "Auto: " + err, "bug", 0f, "auto-error", seq, DateTime.Now, _mouse, _fps, Time.timeScale, ok =>
+                {
+                    if (!ok) return;
+                    _sfx.Play("tick", 0.7f);
+                    _hud.ShowToast("error", "Saved as #" + seq, err, "BUG MARK · CLIP + LOG ATTACHED");
+                });
+            }
+            catch (Exception e)
+            {
+                Debug.LogError("Playmark: the error mark was not saved: " + e);
+                _busy = false;
+            }
+            // Saving works from the pixels; the textures were only for the overlay.
+            DestroyTextures(tex, frames);
         }
 
         // --- The loop back from Claude ------------------------------------------------------

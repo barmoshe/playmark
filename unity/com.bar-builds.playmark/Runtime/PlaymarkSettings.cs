@@ -46,18 +46,37 @@ namespace BarBuilds.Playmark
         public string outputDir = ".playmark";
 
         static PlaymarkSettings _current;
+        static bool _isDefault;
 
         public static PlaymarkSettings Current
         {
             get
             {
-                if (_current == null) _current = Resources.Load<PlaymarkSettings>(ResourceName);
-                if (_current == null) _current = CreateInstance<PlaymarkSettings>();
+                // In edit mode keep looking for the asset: it may be created after the first read.
+                if (_current == null || (_isDefault && !Application.isPlaying))
+                {
+                    var asset = Resources.Load<PlaymarkSettings>(ResourceName);
+                    if (asset != null)
+                    {
+                        _current = asset;
+                        _isDefault = false;
+                    }
+                    else if (_current == null)
+                    {
+                        _current = CreateInstance<PlaymarkSettings>();
+                        _current.hideFlags = HideFlags.HideAndDontSave;
+                        _isDefault = true;
+                    }
+                }
                 return _current;
             }
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void ResetStatics() => _current = null;
+        static void ResetStatics()
+        {
+            _current = null;
+            _isDefault = false;
+        }
     }
 }

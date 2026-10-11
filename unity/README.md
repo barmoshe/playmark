@@ -120,7 +120,9 @@ and stops: a quick check that Playmark works in your project.
   open, so `inbox.mjs` drops a request in `.playmark/requests/`. The package's Editor script opens
   the mark's scene and enters Play Mode. It waits while you're playing, and refuses when the open
   scene has unsaved changes. If a Development Build is your playtest, set `$PLAYMARK_UNITY_PLAYER`
-  to it and warp runs the build with `-playmark-warp=<id>` instead.
+  to it and warp runs the build with `-playmark-dir=<.playmark> -playmark-warp=<id>` (plus any `args`
+  your warp data saved) instead. A request nobody picks up within 10 minutes expires, so opening
+  Unity later never replays an old run.
 
 ## What to check first
 
@@ -134,6 +136,10 @@ Things the CI build can't prove. Check them on a real Editor before calling a ve
    with Unity in the background.
 4. **A script fix mid-play**: the toast arrives, and Playmark keeps working after the reload.
 5. **Fonts**: Heebo and Cascadia Mono render. Hebrew in the note is not shaped right-to-left yet.
+6. **Typing into the note** from outside the field keeps the first letter first.
+
+Known: clip frames include Playmark's own toasts and ghosts when they are on screen (the freeze
+frame hides them), as in the Godot addon.
 
 ## Layout
 

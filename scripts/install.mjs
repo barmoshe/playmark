@@ -93,6 +93,11 @@ function installUnity(project) {
   manifest.dependencies ??= {};
   const embedded = path.join(project, "Packages", UNITY_PACKAGE);
   if (useGit) {
+    const [major, minor] = pluginVersion.split(".").map(Number);
+    if (major === 0 && minor < 4) {
+      console.error(`--git needs a release with the Unity package (0.4.0 or newer); this plugin is ${pluginVersion}. Run without --git to embed the package instead.`);
+      process.exit(1);
+    }
     fs.rmSync(embedded, { recursive: true, force: true }); // an embedded copy would win over the URL
     manifest.dependencies[UNITY_PACKAGE] = `https://github.com/barmoshe/playmark.git?path=/unity/${UNITY_PACKAGE}#v${pluginVersion}`;
   } else {

@@ -97,8 +97,9 @@ namespace BarBuilds.Playmark
             }
             RenderTexture.active = old;
             Clear();
+            // Decided once the frames can tell; until then they are taken as upright.
             if (frames.Count > 0 && freeze != null && _flipped == null)
-                _flipped = RgbaImage.LooksFlipped(freeze, frames[frames.Count - 1].Image);
+                _flipped = RgbaImage.Orientation(freeze, frames[frames.Count - 1].Image);
             if (_flipped == true)
                 foreach (var f in frames) f.Image.FlipRows();
             return frames;

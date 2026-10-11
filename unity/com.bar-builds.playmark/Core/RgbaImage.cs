@@ -171,11 +171,20 @@ namespace BarBuilds.Playmark.Core
         /// down. Clip frames come off the GPU, whose row order differs by graphics API; the
         /// freeze frame is known to be upright, so one comparison settles it for the session.
         /// </summary>
-        public static bool LooksFlipped(RgbaImage reference, RgbaImage frame)
+        public static bool LooksFlipped(RgbaImage reference, RgbaImage frame) => Orientation(reference, frame) == true;
+
+        /// <summary>
+        /// True: upside down. False: upright. Null: the frame can't tell (a fade to black, a
+        /// symmetric scene), so ask again with the next one rather than guess for the session.
+        /// </summary>
+        public static bool? Orientation(RgbaImage reference, RgbaImage frame)
         {
             var flipped = frame.Clone();
             flipped.FlipRows();
-            return reference.Difference(flipped) + 0.5 < reference.Difference(frame);
+            var asIs = reference.Difference(frame);
+            var turned = reference.Difference(flipped);
+            if (Math.Abs(asIs - turned) < 4) return null;
+            return turned < asIs;
         }
 
         // --- Marks on the frame (images.gd) ------------------------------------------------
