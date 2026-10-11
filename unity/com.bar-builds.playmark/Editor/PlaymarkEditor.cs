@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.RegularExpressions;
 using BarBuilds.Playmark.Core;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -22,14 +23,17 @@ namespace BarBuilds.Playmark.EditorTools
     {
         const string RequestKey = "Playmark.Request";
         const string StartedKey = "Playmark.RequestStarted";
+        const string RunningKey = "Playmark.RequestRunning";
         static double _nextPoll;
 
         static PlaymarkEditor()
         {
             Hooks.ScriptPath = b =>
             {
-                var script = b != null ? MonoScript.FromMonoBehaviour(b) : null;
-                return script != null ? AssetDatabase.GetAssetPath(script) : null;
+                if (b == null) return null;
+                var script = MonoScript.FromMonoBehaviour(b);
+                var path = script != null ? AssetDatabase.GetAssetPath(script) : null;
+                return string.IsNullOrEmpty(path) ? FileDeclaring(b.GetType()) : path;
             };
             Hooks.PrefabPath = go => go != null ? PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(go) : null;
             Hooks.TakeRequest = () =>
@@ -46,6 +50,54 @@ namespace BarBuilds.Playmark.EditorTools
             };
             EditorApplication.update -= Poll;
             EditorApplication.update += Poll;
+            EditorApplication.pauseStateChanged -= OnPause;
+            EditorApplication.pauseStateChanged += OnPause;
+            EditorApplication.playModeStateChanged -= OnPlayMode;
+            EditorApplication.playModeStateChanged += OnPlayMode;
+        }
+
+        /// <summary>
+        /// Nobody is at the keyboard during a warp or smoke run: if the Console's Error Pause stops
+        /// it (an error in the game, or one Unity logs itself on the reload), carry on. The error
+        /// is in the Console and the mark's log.
+        /// </summary>
+        static void OnPause(PauseState state)
+        {
+            if (state != PauseState.Paused || !SessionState.GetBool(RunningKey, false)) return;
+            Debug.Log("Playmark: Unity paused on an error (Error Pause); the unattended run carries on.");
+            EditorApplication.isPaused = false;
+        }
+
+        static void OnPlayMode(PlayModeStateChange change)
+        {
+            if (change == PlayModeStateChange.EnteredEditMode) SessionState.EraseBool(RunningKey);
+        }
+
+        static readonly Dictionary<Type, string> _declaredIn = new Dictionary<Type, string>();
+
+        /// <summary>
+        /// A component class that shares a file with another (ToyShape in Toy.cs) has no
+        /// MonoScript of its own: find the script under Assets/ that declares it.
+        /// </summary>
+        static string FileDeclaring(Type type)
+        {
+            if (_declaredIn.TryGetValue(type, out var found)) return found;
+            found = null;
+            var decl = new Regex(@"\bclass\s+" + Regex.Escape(type.Name) + @"\b");
+            foreach (var guid in AssetDatabase.FindAssets("t:MonoScript", new[] { "Assets" }))
+            {
+                var path = AssetDatabase.GUIDToAssetPath(guid);
+                if (!path.EndsWith(".cs", StringComparison.Ordinal)) continue;
+                try
+                {
+                    if (!decl.IsMatch(File.ReadAllText(path))) continue;
+                }
+                catch (IOException) { continue; }
+                found = path;
+                break;
+            }
+            _declaredIn[type] = found;
+            return found;
         }
 
         /// <summary>The project's .playmark folder (Project Settings, Playmark, Output Dir).</summary>
@@ -100,6 +152,7 @@ namespace BarBuilds.Playmark.EditorTools
             if (pending.Length == 0) return false;
             if (EditorApplication.timeSinceStartup - SessionState.GetFloat(StartedKey, 0f) < 5) return true;
             SessionState.EraseString(RequestKey);
+            SessionState.EraseBool(RunningKey);
             var req = Json.TryParseObject(pending);
             var why = EditorUtility.scriptCompilationFailed
                 ? "Unity has script compile errors, so it can't enter Play Mode. Fix them (see the Console), then run it again."
@@ -148,6 +201,7 @@ namespace BarBuilds.Playmark.EditorTools
             Debug.Log("Playmark: " + action + " requested from Claude Code, entering Play Mode");
             SessionState.SetString(RequestKey, Json.Write(req, false));
             SessionState.SetFloat(StartedKey, (float)EditorApplication.timeSinceStartup);
+            SessionState.SetBool(RunningKey, true);
             EditorApplication.EnterPlaymode();
         }
 

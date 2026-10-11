@@ -5,8 +5,9 @@
 //
 //   node unity/check/compile.mjs [--unity <Editor/Data dir>] [--inputsystem <package dir>]
 //
-// --unity: the Editor's Data folder (holds Managed/ and NetStandard/). Default $UNITY_DATA,
-//   else /opt/unity-ref/Editor/Data. CI extracts it from the Linux Editor archive.
+// --unity: the Editor's Data folder (holds Managed/ and NetStandard/), or on a Mac the Editor's
+//   Unity.app. Default $UNITY_DATA, else /opt/unity-ref/Editor/Data. CI extracts it from the
+//   Linux Editor archive.
 // --inputsystem: an unpacked com.unity.inputsystem package. Default $UNITY_INPUTSYSTEM,
 //   else /opt/unity-pkgs/inputsystem/package. Without it, the Input System path is skipped.
 // Needs the .NET SDK (dotnet) for csc.
@@ -21,15 +22,20 @@ const flag = (name, env, fallback) => {
   const i = process.argv.indexOf(name);
   return i > 0 ? process.argv[i + 1] : process.env[env] || fallback;
 };
-const data = flag("--unity", "UNITY_DATA", "/opt/unity-ref/Editor/Data");
+let editor = flag("--unity", "UNITY_DATA", "/opt/unity-ref/Editor/Data");
+if (editor.endsWith(".app")) editor = path.join(editor, "Contents");
+// A Mac Editor is an app bundle: Unity.app/Contents/Resources/Scripting holds Managed/ and
+// NetStandard/, and the built-in packages are in Contents/Resources/PackageManager.
+const mac = fs.existsSync(path.join(editor, "Resources", "Scripting", "Managed"));
+const data = mac ? path.join(editor, "Resources", "Scripting") : editor;
 const inputPkg = flag("--inputsystem", "UNITY_INPUTSYSTEM", "/opt/unity-pkgs/inputsystem/package");
 const managed = path.join(data, "Managed");
 const engineDir = path.join(managed, "UnityEngine");
-const ugui = path.join(data, "Resources", "PackageManager", "BuiltInPackages", "com.unity.ugui");
+const ugui = path.join(editor, "Resources", "PackageManager", "BuiltInPackages", "com.unity.ugui");
 const out = fs.mkdtempSync(path.join(os.tmpdir(), "playmark-compile-"));
 
 if (!fs.existsSync(engineDir)) {
-  console.error(`No Unity assemblies at ${engineDir}. Pass --unity <Editor/Data>.`);
+  console.error(`No Unity assemblies at ${engineDir}. Pass --unity <Editor/Data> (on a Mac, <version>/Unity.app).`);
   process.exit(2);
 }
 
@@ -125,5 +131,5 @@ if (runtime && fs.existsSync(toy)) {
   if (toyDll) compile("Toy.Editor", sources(path.join(toy, "Editor"), /Tests[\\/]/), [...engineRefs, ...editorRefs, toyDll], ["UNITY_EDITOR"], { warnAsError: true });
 }
 
-if (!process.exitCode) console.log(`unity package: compiles against ${path.basename(path.dirname(path.dirname(data))) || data} (${input ? "with" : "without"} the Input System)`);
+if (!process.exitCode) console.log(`unity package: compiles against ${mac ? path.basename(path.dirname(path.dirname(editor))) : path.basename(path.dirname(path.dirname(data))) || data} (${input ? "with" : "without"} the Input System)`);
 fs.rmSync(out, { recursive: true, force: true });

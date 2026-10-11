@@ -247,6 +247,29 @@ public class LogRingTests
         log.Add("Error", "Playmark: can't write", "");
         Assert.Null(log.TakeError());
     }
+
+    [Fact]
+    public void IgnoresErrorsThrownOnlyInsideUnity()
+    {
+        var log = new LogRing(40);
+        // Seen on Unity 6000.3: Quick Search's indexer, and the Pipeline package's server.
+        log.Add("Exception", "ArgumentOutOfRangeException: Index was out of range.",
+            "System.Collections.Generic.List`1[T].get_Item (System.Int32 index) (at <4ac0ee78>:0)\n" +
+            "UnityEditor.Search.SearchDatabase+<EnumerateAll>d__83.MoveNext () (at /Users/bokken/build/output/unity/unity/Modules/QuickSearch/Editor/Indexing/SearchDatabase.cs:453)\n" +
+            "UnityEditor.EditorApplication.Internal_CallDelayFunctions () (at /Users/bokken/build/output/unity/unity/Editor/Mono/EditorApplication.cs:407)\n");
+        log.Add("Error", "Failed to handle /api/exec request: Main thread operation timed out after 5000ms",
+            "UnityEngine.Debug:LogError (object)\n" +
+            "Unity.Pipeline.BasePipelineServer/<HandleExecRequest>d__119:MoveNext () (at ./Library/PackageCache/com.unity.pipeline@62c08c808737/Runtime/Common/BasePipelineServer.cs:2257)\n" +
+            "System.Threading._ThreadPoolWaitCallback:PerformWaitCallback ()\n");
+        Assert.Null(log.TakeError());
+        Assert.Contains("EXCEPTION: ArgumentOutOfRangeException: Index was out of range.", log.Dump());
+
+        // The game's own frame anywhere in the stack, or no stack at all, is the game's error.
+        log.Add("Error", "Boss has no target", "UnityEngine.Debug:LogError (object)\nBoss:Update () (at Assets/Boss.cs:12)\n");
+        log.Add("Error", "The referenced script on this Behaviour is missing!", "");
+        Assert.Equal("Boss has no target", log.TakeError());
+        Assert.Equal("The referenced script on this Behaviour is missing!", log.TakeError());
+    }
 }
 
 public class ImageTests

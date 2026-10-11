@@ -28,7 +28,7 @@ namespace BarBuilds.Playmark.Core
                 foreach (var line in head.Split('\n')) Push(line.TrimEnd('\r'));
                 if (level != "Log" && level != "Warning" && !string.IsNullOrEmpty(stack))
                     foreach (var line in stack.TrimEnd().Split('\n')) Push("    " + line.TrimEnd('\r'));
-                if ((level == "Error" || level == "Exception" || level == "Assert") && !message.StartsWith("Playmark", StringComparison.Ordinal))
+                if ((level == "Error" || level == "Exception" || level == "Assert") && !message.StartsWith("Playmark", StringComparison.Ordinal) && !UnityOnly(stack))
                 {
                     var first = FirstLine(message);
                     if (_seenErrors.Add(first)) _errors.Enqueue(first);
@@ -56,6 +56,28 @@ namespace BarBuilds.Playmark.Core
                 foreach (var l in _lines) sb.Append(l).Append('\n');
                 return sb.ToString().TrimEnd('\n');
             }
+        }
+
+        static readonly string[] EngineCode = { "UnityEngine.", "UnityEditor.", "Unity.", "System.", "Mono." };
+
+        /// <summary>
+        /// A stack with no frame of the game's own code: the Editor or one of Unity's packages
+        /// failed (Quick Search's indexer, the Pipeline server), not the game. Those are logged
+        /// but never become bug marks. An empty stack (a native message) still counts.
+        /// </summary>
+        static bool UnityOnly(string stack)
+        {
+            if (string.IsNullOrWhiteSpace(stack)) return false;
+            foreach (var raw in stack.Split('\n'))
+            {
+                var line = raw.Trim();
+                if (line.Length == 0) continue;
+                var engine = false;
+                foreach (var prefix in EngineCode)
+                    if (line.StartsWith(prefix, StringComparison.Ordinal)) { engine = true; break; }
+                if (!engine) return false;
+            }
+            return true;
         }
 
         static string FirstLine(string s)

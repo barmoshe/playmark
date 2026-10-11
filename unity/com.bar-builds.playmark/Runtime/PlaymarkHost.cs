@@ -283,7 +283,11 @@ namespace BarBuilds.Playmark
             return Enum.TryParse(name, true, out KeyCode k) && e.keyCode == k;
         }
 
-        static string Keys(Shortcut s) => s.Display(Brand.Mac);
+        /// <summary>
+        /// Spelled out, not ⌃⇧M: the bundled fonts have no key symbols, and the fallback draws them
+        /// unreadably small in a toast's hint line. Ctrl is Control on a Mac too.
+        /// </summary>
+        static string Keys(Shortcut s) => s.Text.ToUpperInvariant();
 
         string _nearId = "";
 
@@ -722,8 +726,11 @@ namespace BarBuilds.Playmark
         IEnumerator Smoke(string outDir, string requestId)
         {
             yield return new WaitForSecondsRealtime(6f);
+            // An automatic mark (the game logged an error) may still be saving: Open would refuse.
+            var deadline = Time.realtimeSinceStartup + 15f;
+            while ((_busy || _opening) && Time.realtimeSinceStartup < deadline) yield return null;
             Open();
-            var deadline = Time.realtimeSinceStartup + 3f;
+            deadline = Time.realtimeSinceStartup + 3f;
             while (_overlay == null && Time.realtimeSinceStartup < deadline) yield return null;
             if (_overlay == null)
             {

@@ -97,16 +97,17 @@ namespace BarBuilds.Playmark
             }
             RenderTexture.active = old;
             Clear();
-            // Decided once the frames can tell; until then they are taken as upright.
+            // Decided once the frames can tell; until then the graphics API's row order decides
+            // (Metal and Direct3D come out upside down). A near-symmetric scene can't tell.
             if (frames.Count > 0 && freeze != null && _flipped == null)
                 _flipped = RgbaImage.Orientation(freeze, frames[frames.Count - 1].Image);
-            if (_flipped == true)
+            if (TexturesFlipped)
                 foreach (var f in frames) f.Image.FlipRows();
             return frames;
         }
 
         /// <summary>True when clip textures must be drawn upside down to look right.</summary>
-        public static bool TexturesFlipped => _flipped == true;
+        public static bool TexturesFlipped => _flipped ?? SystemInfo.graphicsUVStartsAtTop;
 
         /// <summary>
         /// The frame on screen now, upright. Call at the end of a frame. Reads the back buffer with
