@@ -105,8 +105,9 @@ const core = compile("BarBuilds.Playmark.Core", sources(path.join(pkg, "Core")),
 if (!core) process.exit(1);
 const runtimeSources = sources(path.join(pkg, "Runtime"));
 const combos = [
-  ["PLAYMARK_PHYSICS", "PLAYMARK_PHYSICS2D", ...(input ? ["PLAYMARK_INPUT_SYSTEM"] : [])],
-  [], // physics modules disabled, legacy input only
+  // Unity sets ENABLE_INPUT_SYSTEM / ENABLE_LEGACY_INPUT_MANAGER from Active Input Handling.
+  ["PLAYMARK_PHYSICS", "PLAYMARK_PHYSICS2D", "ENABLE_LEGACY_INPUT_MANAGER", ...(input ? ["PLAYMARK_INPUT_SYSTEM", "ENABLE_INPUT_SYSTEM"] : [])],
+  ["ENABLE_LEGACY_INPUT_MANAGER"], // physics modules disabled, legacy input only
 ];
 let runtime = null;
 for (const defs of combos) {
@@ -114,7 +115,7 @@ for (const defs of combos) {
   if (defs.length && dll) runtime = dll;
 }
 // The runtime as the Editor compiles it (UNITY_EDITOR), then the Editor assembly on top.
-const runtimeEd = compile("BarBuilds.Playmark", runtimeSources, [...engineRefs, ...editorRefs, core, ui, ...(input ? [input] : [])], ["UNITY_EDITOR", "PLAYMARK_PHYSICS", "PLAYMARK_PHYSICS2D", ...(input ? ["PLAYMARK_INPUT_SYSTEM"] : [])], { warnAsError: true });
+const runtimeEd = compile("BarBuilds.Playmark", runtimeSources, [...engineRefs, ...editorRefs, core, ui, ...(input ? [input] : [])], ["UNITY_EDITOR", "PLAYMARK_PHYSICS", "PLAYMARK_PHYSICS2D", ...(input ? ["PLAYMARK_INPUT_SYSTEM", "ENABLE_INPUT_SYSTEM"] : [])], { warnAsError: true });
 if (runtimeEd) compile("BarBuilds.Playmark.Editor", sources(path.join(pkg, "Editor"), /Tests[\\/]/), [...engineRefs, ...editorRefs, core, runtimeEd, ui], ["UNITY_EDITOR"], { warnAsError: true });
 
 // The Toy sample compiles into the user's project (Assembly-CSharp and Assembly-CSharp-Editor).

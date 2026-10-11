@@ -108,21 +108,22 @@ namespace BarBuilds.Playmark
         /// <summary>True when clip textures must be drawn upside down to look right.</summary>
         public static bool TexturesFlipped => _flipped == true;
 
-        /// <summary>The frame on screen now, upright. Call at the end of a frame.</summary>
+        /// <summary>
+        /// The frame on screen now, upright. Call at the end of a frame. Reads the back buffer with
+        /// ReadPixels: ScreenCapture.CaptureScreenshotAsTexture comes out too bright in Linear
+        /// color projects (a known Won't Fix), and ReadPixels from the screen has a fixed row order.
+        /// </summary>
         public static (Texture2D texture, RgbaImage image) Freeze()
         {
-            var tex = ScreenCapture.CaptureScreenshotAsTexture();
-            if (tex == null) return (null, null);
-            tex.hideFlags = HideFlags.HideAndDontSave;
-            if (tex.format != TextureFormat.RGBA32)
-            {
-                var conv = new Texture2D(tex.width, tex.height, TextureFormat.RGBA32, false) { hideFlags = HideFlags.HideAndDontSave };
-                conv.SetPixels32(tex.GetPixels32());
-                conv.Apply();
-                UnityEngine.Object.Destroy(tex);
-                tex = conv;
-            }
-            return (tex, RgbaImage.FromBottomUp(tex.width, tex.height, tex.GetPixelData<byte>(0).ToArray()));
+            int w = Screen.width, h = Screen.height;
+            if (w <= 0 || h <= 0) return (null, null);
+            var old = RenderTexture.active;
+            RenderTexture.active = null;
+            var tex = new Texture2D(w, h, TextureFormat.RGBA32, false) { hideFlags = HideFlags.HideAndDontSave };
+            tex.ReadPixels(new Rect(0, 0, w, h), 0, 0, false);
+            tex.Apply();
+            RenderTexture.active = old;
+            return (tex, RgbaImage.FromBottomUp(w, h, tex.GetPixelData<byte>(0).ToArray()));
         }
 
         public void Dispose()

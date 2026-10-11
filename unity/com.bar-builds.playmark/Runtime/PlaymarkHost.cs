@@ -176,7 +176,13 @@ namespace BarBuilds.Playmark
 
         void Update()
         {
-            if (_inbox == null) return;
+            if (_inbox == null)
+            {
+                // A script reload that didn't call OnEnable: start over from disk.
+                if (isActiveAndEnabled) Init();
+                if (_inbox == null) return;
+            }
+            PollShortcutsFromInputSystem();
             _sfx.Install();
             _fps = Mathf.Lerp(_fps, 1f / Mathf.Max(Time.unscaledDeltaTime, 1e-4f), 0.05f);
             while (_main.TryDequeue(out var a)) a();
@@ -206,15 +212,13 @@ namespace BarBuilds.Playmark
                 if (Matches(e, _shortcut))
                 {
                     e.Use();
-                    Open();
+                    Trigger(true);
                     return;
                 }
                 if (Matches(e, _ghostKey))
                 {
                     e.Use();
-                    _hud.GhostsVisible = !_hud.GhostsVisible;
-                    _sfx.Play("chip", _hud.GhostsVisible ? 1.2f : 0.8f);
-                    _hud.ShowToast("ready", "Ghosts " + (_hud.GhostsVisible ? "on" : "off"), _hud.Ghosts.Count + " marks in this scene", Keys(_ghostKey) + " TO TOGGLE", 1.6f);
+                    Trigger(false);
                 }
             }
             if (_hideGui) return;
@@ -227,6 +231,50 @@ namespace BarBuilds.Playmark
             if (e.type == EventType.Repaint) UpdateNear(cam);
             _hud.OnGUI(cam);
         }
+
+        int _triggeredFrame = -1;
+
+        /// <summary>The shortcut can arrive twice in one frame (IMGUI and the Input System): act once.</summary>
+        void Trigger(bool open)
+        {
+            if (_triggeredFrame == Time.frameCount || _overlay != null || _opening) return;
+            _triggeredFrame = Time.frameCount;
+            if (open)
+            {
+                Open();
+                return;
+            }
+            _hud.GhostsVisible = !_hud.GhostsVisible;
+            _sfx.Play("chip", _hud.GhostsVisible ? 1.2f : 0.8f);
+            _hud.ShowToast("ready", "Ghosts " + (_hud.GhostsVisible ? "on" : "off"), _hud.Ghosts.Count + " marks in this scene", Keys(_ghostKey) + " TO TOGGLE", 1.6f);
+        }
+
+        /// <summary>
+        /// With only the Input System enabled, IMGUI keyboard events are not guaranteed (reports
+        /// conflict), so the shortcut is also read from the keyboard device directly.
+        /// </summary>
+        void PollShortcutsFromInputSystem()
+        {
+#if PLAYMARK_INPUT_SYSTEM && ENABLE_INPUT_SYSTEM
+            var kb = UnityEngine.InputSystem.Keyboard.current;
+            if (kb == null || _overlay != null || _opening) return;
+            if (Pressed(kb, _shortcut)) Trigger(true);
+            else if (Pressed(kb, _ghostKey)) Trigger(false);
+#endif
+        }
+
+#if PLAYMARK_INPUT_SYSTEM && ENABLE_INPUT_SYSTEM
+        static bool Pressed(UnityEngine.InputSystem.Keyboard kb, Shortcut s)
+        {
+            if (!s.IsValid) return false;
+            var name = s.Key.Length == 1 && char.IsDigit(s.Key[0]) ? "Digit" + s.Key : s.Key;
+            if (!Enum.TryParse(name, true, out UnityEngine.InputSystem.Key key) || key == UnityEngine.InputSystem.Key.None) return false;
+            var k = kb[key];
+            return k != null && k.wasPressedThisFrame
+                && kb.ctrlKey.isPressed == s.Ctrl && kb.shiftKey.isPressed == s.Shift
+                && kb.altKey.isPressed == s.Alt && (kb.leftMetaKey.isPressed || kb.rightMetaKey.isPressed) == s.Cmd;
+        }
+#endif
 
         static bool Matches(Event e, Shortcut s)
         {
@@ -592,6 +640,9 @@ namespace BarBuilds.Playmark
         IEnumerator RunRequest(Dictionary<string, object> req)
         {
             if (req == null) yield break;
+            // Asked from a terminal, Unity is usually in the background, where Play Mode pauses
+            // unless the game runs in the background. This session is a test run: let it.
+            Application.runInBackground = true;
             var id = Json.Str(req, "id");
             switch (Json.Str(req, "action"))
             {

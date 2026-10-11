@@ -58,7 +58,7 @@ fix is one line in `ToyLooks.cs`. Stop and play again to see it.
 | **Freeze and mark** | `Time.timeScale = 0` and paused audio while the overlay is open. Click to pin, drag to box, right-click to undo, <kbd>1</kbd>-<kbd>5</kbd> for a category, type the note. |
 | **Rewind** | The last five seconds are kept on the GPU. <kbd>←</kbd> <kbd>→</kbd> picks the frame where it happened. |
 | **The code under your pin** | Each mark lists the colliders (2D and 3D), renderers and UI (uGUI and UI Toolkit) under every pin and box, with the script asset (`Assets/Scripts/Enemy.cs`) and the prefab they come from. |
-| **Ghosts** | Past marks reappear in the world, in 2D and 3D. Orange is open, blue is fixed. <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>G</kbd> toggles them. |
+| **Ghosts** | Past marks reappear in the world, in 2D and 3D. Orange is open, blue is fixed. <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>J</kbd> toggles them (not G as in Godot: Unity's Ctrl/Cmd+Shift+G is Create Empty Parent, and menu shortcuts fire in Play Mode). |
 | **Errors mark themselves** | The first error or exception of each kind becomes a bug mark with the clip and the log (3 per session). |
 | **Warp back** | `inbox.mjs warp 3` asks the open Editor to open mark #3's scene and enter Play Mode; `--shot after.png` saves a frame and stops, so Claude can check its fix. |
 | **Your game's state** | One line adds the player, the level or the loadout to every mark. |
@@ -119,7 +119,9 @@ and stops: a quick check that Playmark works in your project.
 - **Warp goes through the Editor.** Command-line Unity can't open a project the Editor already has
   open, so `inbox.mjs` drops a request in `.playmark/requests/`. The package's Editor script opens
   the mark's scene and enters Play Mode. It waits while you're playing, and refuses when the open
-  scene has unsaved changes. If a Development Build is your playtest, set `$PLAYMARK_UNITY_PLAYER`
+  scene has unsaved changes. It imports Claude's edits first, refuses when scripts don't compile,
+  and lets that one Play session run in the background (Play Mode otherwise pauses when Unity
+  isn't the front window). If a Development Build is your playtest, set `$PLAYMARK_UNITY_PLAYER`
   to it and warp runs the build with `-playmark-dir=<.playmark> -playmark-warp=<id>` (plus any `args`
   your warp data saved) instead. A request nobody picks up within 10 minutes expires, so opening
   Unity later never replays an old run.
@@ -129,9 +131,13 @@ and stops: a quick check that Playmark works in your project.
 Things the CI build can't prove. Check them on a real Editor before calling a version supported:
 
 1. **The freeze frame and the clip look right** on Built-in and URP (and HDRP, if you use it).
-   Playmark detects upside-down clip frames by itself; check the colors in a Linear-color project.
+   The freeze frame is read from the back buffer (the screenshot API is too bright in Linear-color
+   projects); clip frames come from the GPU, which Unity flips on non-OpenGL APIs by design, and
+   Playmark detects that against the freeze frame. Check clip colors in a Linear-color project.
 2. **The shortcut fires in the Game view** and the note field takes typing, under both input
-   systems and with "Both".
+   systems and with "Both". The shortcut is also read from the Input System's keyboard, since
+   reports conflict on whether IMGUI gets keys with the Input System alone. Check that no Shortcut
+   Manager binding takes Ctrl+Shift+M or Ctrl+Shift+J first (menu items are clear).
 3. **Warp and smoke** run from Claude Code: `inbox.mjs smoke`, then `inbox.mjs warp 1 --shot x.png`,
    with Unity in the background.
 4. **A script fix mid-play**: the toast arrives, and Playmark keeps working after the reload.

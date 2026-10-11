@@ -36,7 +36,8 @@ namespace BarBuilds.Playmark
 
         [Header("Ghosts")]
         public bool ghostsVisible = true;
-        public string ghostsShortcut = "Ctrl+Shift+G";
+        [Tooltip("Shows or hides ghosts. Not Ctrl+Shift+G as in Godot: in Unity that is GameObject, Create Empty Parent, and menu shortcuts fire even in Play Mode.")]
+        public string ghostsShortcut = "Ctrl+Shift+J";
 
         [Tooltip("Fixed marks stay visible this long, so you can retest them. -1: forever.")]
         public float ghostsFixedHours = 72f;
