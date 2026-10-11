@@ -1,0 +1,26 @@
+name: site
+# The website lives in site/. Vercel deploys it (root directory: site); this is the gate in front of it:
+# broken asset links and copy-rule slips fail here.
+on:
+  push:
+    branches: [main]
+    paths: [site/**, .github/workflows/site.yml]
+  pull_request:
+    paths: [site/**, .github/workflows/site.yml]
+
+defaults:
+  run:
+    working-directory: site
+
+jobs:
+  site:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Links, copy rules, metadata
+        run: node scripts/check.mjs
+      - name: HTML validates
+        run: npx --yes html-validate@9 index.html he/index.html
