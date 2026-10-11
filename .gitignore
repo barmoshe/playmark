@@ -5,3 +5,4 @@ node_modules/
 *.import
 footage/
 *.avi
+film/showcase/videos/*.mp4

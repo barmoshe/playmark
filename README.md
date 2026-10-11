@@ -29,13 +29,13 @@ under your pin, and fixes it. Back in the game, a toast says "Fixed" and a marke
 
 ## Watch it work
 
-Three short films, narrated and captioned. Click a frame to play it; each also comes in Hebrew. A 45 s [montage across all three games](film/showcase/videos/playmark-montage-en.mp4) (English) is good for sharing.
+Three short films, narrated and captioned. Click a frame to play it; each also comes in Hebrew. A 45 s [montage across all three games](https://playmark.bar-builds.com/media/montage.mp4) (English) is good for sharing.
 
 <table>
 <tr>
-<td align="center" width="33%"><a href="film/showcase/videos/playmark-color-en.mp4"><img src="docs/video-color.jpg" width="300" alt="Video: a pin on the teal square Boxy with the note 'Boxy should be orange' in the Playmark overlay"></a><br><b>The loop in 16 s</b><br><sub>Mark a shape, Claude fixes it, retest.<br><a href="film/showcase/videos/playmark-color-en.mp4">English</a> · <a href="film/showcase/videos/playmark-color-he.mp4">עברית</a></sub></td>
-<td align="center" width="33%"><a href="film/showcase/videos/playmark-thornback-en.mp4"><img src="docs/video-thornback.jpg" width="300" alt="Video: a box drawn around the Thornback enemy in Wandcraft with the note to redesign it as a charging ram"></a><br><b>Redesigning an enemy, 23 s</b><br><sub>The Thornback from Wandcraft, one mark.<br><a href="film/showcase/videos/playmark-thornback-en.mp4">English</a> · <a href="film/showcase/videos/playmark-thornback-he.mp4">עברית</a></sub></td>
-<td align="center" width="33%"><a href="film/showcase/videos/playmark-star-dodger-en.mp4"><img src="docs/video-star-dodger.jpg" width="300" alt="Video: Star Dodger, a small space game with a ship dodging asteroids, with a Playmark ghost marker on screen"></a><br><b>A game built by marking, 55 s</b><br><sub>Star Dodger: blank project, four marks.<br><a href="film/showcase/videos/playmark-star-dodger-en.mp4">English</a> · <a href="film/showcase/videos/playmark-star-dodger-he.mp4">עברית</a></sub></td>
+<td align="center" width="33%"><a href="https://playmark.bar-builds.com/media/watch-color.mp4"><img src="docs/video-color.jpg" width="300" alt="Video: a pin on the teal square Boxy with the note 'Boxy should be orange' in the Playmark overlay"></a><br><b>The loop in 16 s</b><br><sub>Mark a shape, Claude fixes it, retest.<br><a href="https://playmark.bar-builds.com/media/watch-color.mp4">English</a> · <a href="https://playmark.bar-builds.com/media/watch-color-he.mp4">עברית</a></sub></td>
+<td align="center" width="33%"><a href="https://playmark.bar-builds.com/media/watch-thornback.mp4"><img src="docs/video-thornback.jpg" width="300" alt="Video: a box drawn around the Thornback enemy in Wandcraft with the note to redesign it as a charging ram"></a><br><b>Redesigning an enemy, 23 s</b><br><sub>The Thornback from Wandcraft, one mark.<br><a href="https://playmark.bar-builds.com/media/watch-thornback.mp4">English</a> · <a href="https://playmark.bar-builds.com/media/watch-thornback-he.mp4">עברית</a></sub></td>
+<td align="center" width="33%"><a href="https://playmark.bar-builds.com/media/star-dodger.mp4"><img src="docs/video-star-dodger.jpg" width="300" alt="Video: Star Dodger, a small space game with a ship dodging asteroids, with a Playmark ghost marker on screen"></a><br><b>A game built by marking, 55 s</b><br><sub>Star Dodger: blank project, four marks.<br><a href="https://playmark.bar-builds.com/media/star-dodger.mp4">English</a> · <a href="https://playmark.bar-builds.com/media/star-dodger-he.mp4">עברית</a></sub></td>
 </tr>
 </table>
 
@@ -315,7 +315,8 @@ node unity/check/compile.mjs                                  # the Unity packag
 `demo/` holds the toy scene (four shapes, one table of looks) and the arena the selftest uses.
 `film/capture.gd` drives the game under Godot's movie writer; every GIF here was recorded with it.
 `film/showcase/` holds the scripts that record the three showcase videos, their edit lists (English and
-Hebrew, rendered by `film/cut`) and the finished videos.
+Hebrew, rendered by `film/cut`); renders land in `film/showcase/videos/` (git-ignored) and the
+finished videos are served by the site, to keep the plugin download small.
 
 ## License
 
