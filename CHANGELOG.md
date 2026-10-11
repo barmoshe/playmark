@@ -7,6 +7,7 @@
 - `inbox.mjs export [--all]`: one HTML page with every mark (frame, note, code under each pin, clip, log), images inside. Playmark without any agent: install, play, mark, export, share.
 - New games get an `AGENTS.md` (Codex and most agents read it) and a `CLAUDE.md` that imports it.
 - Godot: a game never opened in the editor no longer gets two automatic bug marks for the addon's fonts on first run. Found by Codex during testing.
+- Repo: no `.gitattributes` export-ignore (the Claude directory refuses it); the release's addon-only zip is built from named paths instead.
 - Docs: the README, the Unity README (screenshots, a tested table) and the skill cover Godot, Unity, Claude Code, Codex and no agent.
 
 ## 0.4.0

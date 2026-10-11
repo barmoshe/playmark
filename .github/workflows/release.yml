@@ -29,9 +29,11 @@ jobs:
         run: |
           v="${GITHUB_REF_NAME#v}"
           awk -v v="## $v" '$0==v{on=1;next} /^## /{on=0} on' CHANGELOG.md > notes.md
-          printf '\n**Install in Claude Code:** `/plugin marketplace add barmoshe/playmark`, `/plugin install playmark@playmark`, then `/playmark:install` in your game. Update: `claude plugin update playmark`.\n' >> notes.md
-      - name: Addon zip (only addons/, via .gitattributes export-ignore)
-        run: git archive --format=zip -o "playmark-${GITHUB_REF_NAME}.zip" HEAD
+          printf '\n**Install in Claude Code:** `/plugin marketplace add barmoshe/playmark`, `/plugin install playmark@playmark`, then `/playmark:install` in your game. **In Codex:** `codex plugin marketplace add barmoshe/playmark`, `codex plugin add playmark@playmark`.\n' >> notes.md
+      - name: Addon zip (only the addon, for the Godot Asset Library and manual installs)
+        # Named paths, not .gitattributes export-ignore: the Claude directory refuses a repo whose
+        # download differs from what people install.
+        run: git archive --format=zip -o "playmark-${GITHUB_REF_NAME}.zip" HEAD addons LICENSE README.md CHANGELOG.md
       - name: Publish the release
         env:
           GH_TOKEN: ${{ github.token }}
