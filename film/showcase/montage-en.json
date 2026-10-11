@@ -1,0 +1,172 @@
+{
+ "rtl": false,
+ "segments": [
+  {
+   "type": "card",
+   "dur": 2.0,
+   "title": "Playmark",
+   "sub": "Mark it while you play. Claude fixes it."
+  },
+  {
+   "type": "clip",
+   "dir": "shapes-color-mark/frames",
+   "from": 40,
+   "to": 215,
+   "audio": "shapes-color-mark/full.wav",
+   "audio_offset": 4.0,
+   "kicker": "1",
+   "label": "Demo",
+   "caption": "A pin on Boxy, a note, save",
+   "cap": "top"
+  },
+  {
+   "type": "clip",
+   "dir": "shapes-color-fixed/frames",
+   "from": 15,
+   "to": 130,
+   "audio": "shapes-color-fixed/full.wav",
+   "audio_offset": 4.0,
+   "kicker": "1",
+   "label": "Demo",
+   "caption": "One line of code, and Boxy is orange"
+  },
+  {
+   "type": "clip",
+   "dir": "thorn-mark/frames",
+   "from": 60,
+   "to": 175,
+   "audio": "thorn-mark/full.wav",
+   "audio_offset": 4.0,
+   "kicker": "2",
+   "label": "Wandcraft",
+   "caption": "A box around the enemy: make it a charging ram",
+   "cap": "top"
+  },
+  {
+   "type": "clip",
+   "dir": "thorn-mark/frames",
+   "from": 380,
+   "to": 450,
+   "audio": "thorn-mark/full.wav",
+   "audio_offset": 4.0,
+   "kicker": "2",
+   "label": "Wandcraft",
+   "caption": "Save: a screenshot, a short clip and the game's context",
+   "cap": "top"
+  },
+  {
+   "type": "clip",
+   "dir": "thorn-fixed/frames",
+   "from": 105,
+   "to": 190,
+   "audio": "thorn-fixed/full.wav",
+   "audio_offset": 4.0,
+   "zoom": [
+    1260,
+    640,
+    1.6,
+    2.6
+   ],
+   "kicker": "2",
+   "label": "Wandcraft",
+   "caption": "Claude redraws it"
+  },
+  {
+   "type": "split",
+   "dur": 2.2,
+   "left": "thorn-split/before.png",
+   "right": "thorn-split/after.png",
+   "labels": [
+    "Before",
+    "After"
+   ]
+  },
+  {
+   "type": "clip",
+   "dir": "sd/blank/frames",
+   "from": 0,
+   "to": 45,
+   "audio": "sd/blank/full.wav",
+   "audio_offset": 4.0,
+   "kicker": "3",
+   "label": "Star Dodger",
+   "caption": "A new game from a blank project"
+  },
+  {
+   "type": "clip",
+   "dir": "sd/step1/frames",
+   "from": 0,
+   "to": 75,
+   "audio": "sd/step1/full.wav",
+   "audio_offset": 4.0,
+   "kicker": "3",
+   "label": "Star Dodger",
+   "caption": "Step 1: a ship, meteors, stars"
+  },
+  {
+   "type": "clip",
+   "dir": "sd/m1-fixed/frames",
+   "from": 20,
+   "to": 110,
+   "audio": "sd/m1-fixed/full.wav",
+   "audio_offset": 4.0,
+   "kicker": "3",
+   "label": "Star Dodger",
+   "caption": "Mark 1: meteors glow red"
+  },
+  {
+   "type": "clip",
+   "dir": "sd/m2-fixed/frames",
+   "from": 20,
+   "to": 110,
+   "audio": "sd/m2-fixed/full.wav",
+   "audio_offset": 4.0,
+   "kicker": "3",
+   "label": "Star Dodger",
+   "caption": "Mark 2: the ship glides"
+  },
+  {
+   "type": "clip",
+   "dir": "sd/m3-fixed/frames",
+   "from": 20,
+   "to": 95,
+   "audio": "sd/m3-fixed/full.wav",
+   "audio_offset": 4.0,
+   "kicker": "3",
+   "label": "Star Dodger",
+   "caption": "Mark 3: faster as the score climbs"
+  },
+  {
+   "type": "clip",
+   "dir": "sd/m4-mark/frames",
+   "from": 291,
+   "to": 361,
+   "audio": "sd/m4-mark/full.wav",
+   "audio_offset": 4.0,
+   "kicker": "3",
+   "label": "Star Dodger",
+   "caption": "Mark 4: shake and sparks on a hit",
+   "cap": "top"
+  },
+  {
+   "type": "clip",
+   "dir": "sd/m4-fixed/frames",
+   "from": 10,
+   "to": 150,
+   "audio": "sd/m4-fixed/full.wav",
+   "audio_offset": 4.0,
+   "kicker": "3",
+   "label": "Star Dodger",
+   "caption": "A hit shakes the screen and throws sparks"
+  },
+  {
+   "type": "card",
+   "dur": 2.8,
+   "title": "github.com/barmoshe/playmark",
+   "size": 76,
+   "sub": "A Godot addon and a Claude Code plugin, open source",
+   "note": "playmark.bar-builds.com"
+  }
+ ],
+ "base": "../../footage"
+}

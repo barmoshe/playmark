@@ -1,0 +1,178 @@
+{
+ "rtl": true,
+ "segments": [
+  {
+   "type": "card",
+   "dur": 2.0,
+   "title": "Playmark",
+   "sub": "מסמנים תוך כדי משחק. Claude מתקן."
+  },
+  {
+   "type": "clip",
+   "dir": "shapes-color-mark/frames",
+   "from": 40,
+   "to": 215,
+   "audio": "shapes-color-mark/full.wav",
+   "audio_offset": 4.0,
+   "kicker": "1",
+   "label": "דמו",
+   "caption": "סיכה על Boxy, ההערה, שמירה",
+   "cap": "top"
+  },
+  {
+   "type": "clip",
+   "dir": "shapes-color-fixed/frames",
+   "from": 15,
+   "to": 130,
+   "audio": "shapes-color-fixed/full.wav",
+   "audio_offset": 4.0,
+   "kicker": "1",
+   "label": "דמו",
+   "caption": "שורה אחת בקוד, ו-Boxy כתום",
+   "kicker_side": "other"
+  },
+  {
+   "type": "clip",
+   "dir": "thorn-mark/frames",
+   "from": 60,
+   "to": 175,
+   "audio": "thorn-mark/full.wav",
+   "audio_offset": 4.0,
+   "kicker": "2",
+   "label": "Wandcraft",
+   "caption": "קופסה סביב האויב: שייראה כמו איל מסתער",
+   "cap": "top"
+  },
+  {
+   "type": "clip",
+   "dir": "thorn-mark/frames",
+   "from": 380,
+   "to": 450,
+   "audio": "thorn-mark/full.wav",
+   "audio_offset": 4.0,
+   "kicker": "2",
+   "label": "Wandcraft",
+   "caption": "שמירה: צילום, קליפ קצר וההקשר של המשחק",
+   "cap": "top"
+  },
+  {
+   "type": "clip",
+   "dir": "thorn-fixed/frames",
+   "from": 105,
+   "to": 190,
+   "audio": "thorn-fixed/full.wav",
+   "audio_offset": 4.0,
+   "zoom": [
+    1260,
+    640,
+    1.6,
+    2.6
+   ],
+   "kicker": "2",
+   "label": "Wandcraft",
+   "caption": "Claude מצייר אותו מחדש",
+   "kicker_side": "other"
+  },
+  {
+   "type": "split",
+   "dur": 2.2,
+   "left": "thorn-split/before.png",
+   "right": "thorn-split/after.png",
+   "labels": [
+    "לפני",
+    "אחרי"
+   ]
+  },
+  {
+   "type": "clip",
+   "dir": "sd/blank/frames",
+   "from": 0,
+   "to": 45,
+   "audio": "sd/blank/full.wav",
+   "audio_offset": 4.0,
+   "kicker": "3",
+   "label": "Star Dodger",
+   "caption": "משחק חדש מפרויקט ריק"
+  },
+  {
+   "type": "clip",
+   "dir": "sd/step1/frames",
+   "from": 0,
+   "to": 75,
+   "audio": "sd/step1/full.wav",
+   "audio_offset": 4.0,
+   "kicker": "3",
+   "label": "Star Dodger",
+   "caption": "שלב ראשון: חללית, מטאוריטים, כוכבים"
+  },
+  {
+   "type": "clip",
+   "dir": "sd/m1-fixed/frames",
+   "from": 20,
+   "to": 110,
+   "audio": "sd/m1-fixed/full.wav",
+   "audio_offset": 4.0,
+   "kicker": "3",
+   "label": "Star Dodger",
+   "caption": "סימון 1: מטאוריטים אדומים וזוהרים",
+   "kicker_side": "other"
+  },
+  {
+   "type": "clip",
+   "dir": "sd/m2-fixed/frames",
+   "from": 20,
+   "to": 110,
+   "audio": "sd/m2-fixed/full.wav",
+   "audio_offset": 4.0,
+   "kicker": "3",
+   "label": "Star Dodger",
+   "caption": "סימון 2: החללית מחליקה",
+   "kicker_side": "other"
+  },
+  {
+   "type": "clip",
+   "dir": "sd/m3-fixed/frames",
+   "from": 20,
+   "to": 95,
+   "audio": "sd/m3-fixed/full.wav",
+   "audio_offset": 4.0,
+   "kicker": "3",
+   "label": "Star Dodger",
+   "caption": "סימון 3: מאיצים ככל שהניקוד עולה",
+   "kicker_side": "other"
+  },
+  {
+   "type": "clip",
+   "dir": "sd/m4-mark/frames",
+   "from": 291,
+   "to": 361,
+   "audio": "sd/m4-mark/full.wav",
+   "audio_offset": 4.0,
+   "kicker": "3",
+   "label": "Star Dodger",
+   "caption": "סימון 4: רעידה וניצוצות בפגיעה",
+   "cap": "top"
+  },
+  {
+   "type": "clip",
+   "dir": "sd/m4-fixed/frames",
+   "from": 10,
+   "to": 150,
+   "audio": "sd/m4-fixed/full.wav",
+   "audio_offset": 4.0,
+   "kicker": "3",
+   "label": "Star Dodger",
+   "caption": "פגיעה: המסך רועד, ניצוצות עפים",
+   "kicker_side": "other"
+  },
+  {
+   "type": "card",
+   "dur": 2.8,
+   "title": "github.com/barmoshe/playmark",
+   "size": 76,
+   "sub": "תוסף ל-Godot ופלאגין ל-Claude Code, קוד פתוח",
+   "note": "playmark.bar-builds.com"
+  }
+ ],
+ "base": "../../footage"
+}
