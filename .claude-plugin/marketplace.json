@@ -1,13 +1,13 @@
 {
   "name": "playmark",
-  "description": "Playtest feedback from inside your Godot or Unity game, straight to Claude Code.",
+  "description": "Playtest feedback from inside your Godot or Unity game, straight to Claude Code or Codex.",
   "owner": {
     "name": "Bar Moshe"
   },
   "plugins": [
     {
       "name": "playmark",
-      "description": "Mark what you see while playing your Godot or Unity game, write a note, and hand it to Claude Code: the frame, the last seconds of play, the log and the code under your pin. Fixes show up in the game. /playmark:new starts a blank game with it built in.",
+      "description": "Mark what you see while playing your Godot or Unity game, write a note, and hand it to Claude Code or Codex: the frame, the last seconds of play, the log and the code under your pin. Fixes show up in the game. /playmark:new starts a blank game with it built in.",
       "source": "./"
     }
   ]

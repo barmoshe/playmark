@@ -1,13 +1,14 @@
 #!/usr/bin/env node
 // Playmark inbox. Usage:
 //   inbox.mjs list [--all]              new marks (and fixed ones with --all)
-//   inbox.mjs show <id>                 everything Claude needs to read one mark
-//   inbox.mjs claim <id>                mark it "working" (the game shows Claude is on it)
+//   inbox.mjs show <id>                 everything an agent needs to read one mark
+//   inbox.mjs claim <id>                mark it "working" (the game shows someone is on it)
 //   inbox.mjs resolve <id> [--note ""]  move to done/ and record how it was fixed
 //   inbox.mjs reopen <id>               move back to inbox/
 //   inbox.mjs video <id>                clip/ -> clip.mp4 (needs ffmpeg)
 //   inbox.mjs warp <id> [--shot out.png] open the game at the mark; with --shot, save a frame and quit
 //   inbox.mjs smoke [--out dir]         an unattended run: play, mark, save, stop (checks an install)
+//   inbox.mjs export [--all] [--out f]  one HTML page with every open mark (and fixed ones with --all)
 // Unity: warp and smoke ask the open Editor through .playmark/requests/ (Playmark's Editor
 // script enters Play Mode for them). For warp, $PLAYMARK_UNITY_PLAYER runs a Development
 // Build instead (smoke always goes through the Editor).
@@ -16,6 +17,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { execFileSync, spawn } from "node:child_process";
 import { findRoots, listMarks, findMark, oneLine } from "./lib.mjs";
+import { exportMarks } from "./export.mjs";
 
 const [cmd = "list", ...rest] = process.argv.slice(2);
 const flag = (name) => {
@@ -255,6 +257,20 @@ switch (cmd) {
     console.log(`Smoke run OK. Look at ${path.join(out, "smoke-overlay.png")} and ${path.join(out, "smoke-game.png")}.`);
     break;
   }
+  case "export": {
+    const root = roots[0];
+    if (!root) die("No .playmark folder here. Play the game and press Ctrl+Shift+M to make one.");
+    const marks = listMarks(root, "inbox").map((m) => ({ ...m, box: "inbox" }));
+    if (rest.includes("--all")) marks.push(...listMarks(root, "done").map((m) => ({ ...m, box: "done" })));
+    if (!marks.length) die(`No marks to export in ${root}${rest.includes("--all") ? "" : " (fixed ones need --all)"}.`);
+    marks.sort((a, b) => (a.seq ?? 0) - (b.seq ?? 0));
+    const out = path.resolve(flag("--out") ?? path.join(root, "export", "marks.html"));
+    fs.mkdirSync(path.dirname(out), { recursive: true });
+    const title = marks.find((m) => m.project?.name)?.project.name ?? path.basename(path.dirname(root));
+    fs.writeFileSync(out, exportMarks(marks, { title }));
+    console.log(`${marks.length} mark${marks.length === 1 ? "" : "s"} → ${out}`);
+    break;
+  }
   default:
-    die("Commands: list [--all] | show <id> | claim <id> | resolve <id> [--note text] | reopen <id> | video <id> | warp <id> [--shot png] | smoke [--out dir]");
+    die("Commands: list [--all] | show <id> | claim <id> | resolve <id> [--note text] | reopen <id> | video <id> | warp <id> [--shot png] | smoke [--out dir] | export [--all] [--out file]");
 }

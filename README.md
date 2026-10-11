@@ -4,15 +4,14 @@
 
 # Playmark
 
-**Mark what you see while playing your Godot or Unity game. Claude Code fixes it.**
+**Mark what you see while playing your Godot or Unity game. Claude Code or Codex fixes it.**
 
 [![ci](https://github.com/barmoshe/playmark/actions/workflows/ci.yml/badge.svg)](https://github.com/barmoshe/playmark/actions/workflows/ci.yml)
-![Godot 4.5+](https://img.shields.io/badge/Godot-4.5%2B-478cbf)
-![Unity 6+](https://img.shields.io/badge/Unity-6%2B-222222)
-![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-f2621b)
+![Godot 4.5+ · Unity 6 beta](https://img.shields.io/badge/Godot%204.5%2B%20·%20Unity%206%20beta-478cbf)
+![Claude Code · Codex](https://img.shields.io/badge/Claude%20Code%20·%20Codex-plugin-f2621b)
 [![MIT](https://img.shields.io/badge/license-MIT-lightgrey)](LICENSE)
 
-[Watch](#watch-it-work) · [Quick start](#quick-start) · [A real example](#a-real-example-redesigning-an-enemy) · [What Claude gets](#what-a-mark-contains) · [Changelog](CHANGELOG.md)
+[Watch](#watch-it-work) · [Quick start](#quick-start) · [No agent](#no-agent-mark-export-share) · [What a mark holds](#what-a-mark-contains) · [Unity](unity/README.md) · [Changelog](CHANGELOG.md)
 
 <br>
 
@@ -23,10 +22,10 @@
 <br>
 
 Playtesting your own game, you notice small things you'd rather not stop and write up.
-Playmark is a Godot addon and a Unity package, plus a Claude Code plugin, for exactly that moment. Press
-<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>M</kbd>: the game freezes, you pin what you mean and write one
-line. Claude Code gets the frame, the last five seconds, the log and the code under your pin,
-and fixes it. Back in the game, a toast says "Fixed" and a marker stays where you left the note.
+Playmark is a Godot addon and a Unity package, plus a plugin for Claude Code and Codex, for exactly
+that moment. Press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>M</kbd>: the game freezes, you pin what you
+mean and write one line. Your agent gets the frame, the last five seconds, the log and the code
+under your pin, and fixes it. Back in the game, a toast says "Fixed" and a marker stays where you left the note.
 
 ## Watch it work
 
@@ -44,8 +43,8 @@ Three short films, narrated and captioned. Click a frame to play it; each also c
 
 ```mermaid
 flowchart LR
-  A["Play 🎮"] -->|"Ctrl+Shift+M"| B["Mark 📍<br/>pin · box · note"]
-  B -->|".playmark/inbox"| C["Claude Code 🤖<br/>/playmark:triage"]
+  A["Play 🎮<br/>Godot or Unity"] -->|"Ctrl+Shift+M"| B["Mark 📍<br/>pin · box · note"]
+  B -->|".playmark/inbox"| C["Your agent 🤖<br/>Claude Code or Codex"]
   C -->|"fix + resolve"| D["In game ✅<br/>Fixed #N · ghost marker"]
   D --> A
 ```
@@ -54,7 +53,7 @@ flowchart LR
 <tr>
 <td width="25%" valign="top"><b>1. Play</b><br>Run your game from Godot or Unity. Playmark keeps the last five seconds.</td>
 <td width="25%" valign="top"><b>2. Mark</b><br><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>M</kbd> freezes the frame. Click to pin, drag to box, <kbd>1</kbd>-<kbd>5</kbd> for a category, type the note.</td>
-<td width="25%" valign="top"><b>3. Claude fixes</b><br>Your next prompt mentions the mark. <code>/playmark:triage</code> finds the code under the pin and proposes a fix. You pick.</td>
+<td width="25%" valign="top"><b>3. The agent fixes</b><br>It reads the frame, finds the code under the pin and proposes a fix. You pick.</td>
 <td width="25%" valign="top"><b>4. Retest</b><br>The game shows "Fixed #N" with what changed. The marker stays where you made it.</td>
 </tr>
 </table>
@@ -102,84 +101,97 @@ Each was one line in the toy scene's `look.gd`. The toy is in [`demo/`](demo).
 | **The code under your pin** | Each mark lists the colliders, nodes, scripts and UI controls under every pin and box. |
 | **Ghosts** | Past marks reappear in the world where you made them. Orange is open, blue is fixed. |
 | **Errors mark themselves** | A script error becomes a bug mark with the clip and the log. |
-| **Warp back** | `inbox.mjs warp 3` opens the game at mark #3; `--shot` saves a frame so Claude can check its fix. |
+| **Warp back** | `inbox.mjs warp 3` opens the game at mark #3; `--shot` saves a frame so the agent can check its fix. |
 | **Your game's state** | One line adds the player, the level or the loadout to every mark. |
+| **Share without AI** | `inbox.mjs export` turns the marks into one page anyone can open. |
 | **Dev builds only** | Nothing runs in a release export unless you turn it on. |
 
 ## Quick start
 
-Needs Godot 4.5+ or Unity 6+, Claude Code and Node 18+. In Claude Code:
+Needs Godot 4.5+ or Unity 6+, Node 18+, and Claude Code or Codex.
+
+<table>
+<tr><th width="50%">Claude Code</th><th width="50%">Codex</th></tr>
+<tr>
+<td valign="top">
 
 ```
 /plugin marketplace add barmoshe/playmark
 /plugin install playmark@playmark
-```
-
-Then, from your game's repo:
-
-```
 /playmark:install
 ```
 
-In a Godot project that copies `addons/playmark` into it, enables it and git-ignores `.playmark/`.
-Run the game from Godot and press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>M</kbd>.
+New marks show up in your next prompt. `/playmark:triage` works through them.
 
-In a Unity 6 project it embeds the package in `Packages/com.bar-builds.playmark`: press Play,
-then <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>M</kbd>. The Unity side has its own page:
-[unity/README.md](unity/README.md). It is new, and not yet checked in a running Editor. Update later with
-`claude plugin update playmark`.
+</td>
+<td valign="top">
 
-### Codex
-
-Codex uses the same Godot addon, mark files, and Node helpers. From a terminal
-with a current Codex CLI:
-
-```sh
+```
 codex plugin marketplace add barmoshe/playmark
 codex plugin add playmark@playmark
 ```
 
-Start a new Codex session in your game repository.
-Tell Codex: **Use the playmark skill to install Playmark in this Godot project.**
-Run the game. Push **Ctrl+Shift+M**. Add a pin.
+In a new session in your game's repo: "Install Playmark in this game", then later "Use playmark to triage my marks".
 
-Add a note. Save the mark.
-Tell Codex: **Use playmark to triage my marks.**
-Codex reads the annotated frame, recent frames, `log.txt` and scene context before it changes code.
+</td>
+</tr>
+</table>
 
-Use Codex for installation and feedback triage in a Godot game.
-The `/playmark:new` command and automatic new-mark notices are Claude Code functions.
-Codex reads the inbox when you tell it to. It installs no lifecycle hooks.
-Use one agent for each mark when the two clients use the same project.
+Then play and press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>M</kbd>:
 
-To test a local checkout, replace `barmoshe/playmark` in the marketplace command
-with its absolute path. Keep the complete package.
-The `scripts/` and `addons/` directories adjacent to the skill are necessary.
-Start a new Codex session after installation.
+| | Godot 4.5+ | Unity 6+ (beta) |
+|---|---|---|
+| Install puts | `addons/playmark`, enabled | the package in `Packages/com.bar-builds.playmark` |
+| You play in | the game run from Godot | Play Mode |
+| More | [below](#using-it-in-a-game) | [unity/README.md](unity/README.md) |
+
+Both git-ignore `.playmark/`. `inbox.mjs smoke` checks an install by itself: it plays 6 s, marks,
+saves and stops. Update with `claude plugin update playmark` or `codex plugin add playmark@playmark`.
 
 ### Or start a new game with it
 
-```
-/playmark:new star-dodger --name "Star Dodger"
-```
+Claude Code: `/playmark:new star-dodger --name "Star Dodger"`. Codex: "Start a new Playmark game in
+star-dodger".
 
-A blank Godot project (Godot only, for now) with Playmark already wired in: one playable scene (a square you move in
-an empty room), a `CLAUDE.md` that teaches the build, playtest, mark, fix loop, and a first
-commit. Say what game to build, play each step, mark what's off.
+A blank Godot project with Playmark wired in: one playable scene (a square you move in an empty
+room), an `AGENTS.md` that teaches the build, playtest, mark, fix loop (`CLAUDE.md` imports it),
+and a first commit. Say what game to build, play each step, mark what's off.
 
 [Star Dodger](https://github.com/barmoshe/star-dodger) was built this way: a blank project, step 1,
 then four marks while playing, one commit each. Watch it on
 [playmark.bar-builds.com](https://playmark.bar-builds.com/#new) (55 s, with sound).
 
-<details>
-<summary>Without Claude Code</summary>
+### No agent? Mark, export, share
 
-<br>
+Playmark works without any AI. Marks are plain files, and one command turns them into a page
+you can open in a browser or send to a teammate.
 
-Copy `addons/playmark` into your project and enable **Playmark** in Project Settings, Plugins.
-Marks still land in `.playmark/inbox/`, readable by any tool or person.
+```mermaid
+flowchart LR
+  A["Play 🎮"] -->|"Ctrl+Shift+M"| B["Mark 📍"]
+  B --> C[".playmark/inbox"]
+  C -->|"inbox.mjs export"| D["marks.html 📄<br/>frames · notes · clip · log"]
+  D --> E["A teammate, an issue,<br/>any tool"]
+```
 
-</details>
+1. **Install by hand.** Godot: copy `addons/playmark` into your project and enable **Playmark** in
+   Project Settings, Plugins. Unity: add the package by git URL ([how](unity/README.md#install)).
+   Or let the installer do either: `node playmark/scripts/install.mjs <your game>`.
+2. **Play and mark** as usual.
+3. **Export**, from your game's folder:
+
+   ```bash
+   git clone https://github.com/barmoshe/playmark
+   node playmark/scripts/inbox.mjs export          # .playmark/export/marks.html
+   node playmark/scripts/inbox.mjs export --all    # fixed marks too
+   ```
+
+   One HTML file, images inside it: every mark's frame with its pins, the note, the code under each
+   pin, the last seconds of play and the log. `inbox.mjs list` and `resolve` work by hand too.
+
+<p align="center">
+  <img src="docs/export.png" width="620" alt="The exported marks page: mark #1 with an ART tag, the note 'The yellow circle gets lost against the sunset. Make it orange.', the frozen frame with a numbered pin and a box, and the object under the pin">
+</p>
 
 ## What a mark contains
 
@@ -246,7 +258,7 @@ Playmark.open()
 | Key | Where | Does |
 |---|---|---|
 | <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>M</kbd> | game | open the overlay |
-| <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>G</kbd> | game | show or hide ghosts |
+| <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>G</kbd> | game | show or hide ghosts (Unity: <kbd>J</kbd>) |
 | click / drag / right-click | overlay | pin / box / undo |
 | <kbd>1</kbd>-<kbd>5</kbd> | overlay | bug, feel, art, balance, idea |
 | <kbd>←</kbd> <kbd>→</kbd> | overlay | rewind |
@@ -281,18 +293,19 @@ Project Settings, under `playmark/`:
 
 ## Platforms
 
-Desktop. Tested on macOS with Godot 4.6 and 4.7; CI checks 4.5 and 4.7 on Linux. Windows
-should work and is untested so far. iOS, Android and the web export print "coming soon" and
-stay off for now.
-
-Unity: 6 (6000.0) and newer, desktop, in Play Mode and Development Builds. Compiled against
-6000.0 in CI; see [unity/README.md](unity/README.md#what-to-check-first) for what still needs a
-run in a real Editor.
+| | Status |
+|---|---|
+| **Godot** 4.5+, desktop | Tested on macOS with 4.6 and 4.7; CI checks 4.5 and 4.7 on Linux. Windows should work, untested. |
+| **Unity** 6+, desktop | Beta: checked in 6000.3 LTS on a Mac. See [unity/README.md](unity/README.md#tested). |
+| **Claude Code** | The plugin: skill, commands, a new-marks notice on each prompt. |
+| **Codex** | The same skill and helpers; ask for triage yourself (no notice). |
+| **No agent** | Install by hand, `inbox.mjs export` for a shareable page. |
+| iOS, Android, web | Prints "coming soon" and stays off. |
 
 ## Development
 
 ```bash
-node --test tests/*.test.mjs                                  # the Claude Code side
+node --test tests/*.test.mjs                                  # the agent side: inbox, installer, notice
 godot --headless --path demo --script "$PWD/tests/unit.gd"    # the addon, no window
 tests/run_selftest.sh                                         # the whole loop, in a window
 dotnet test unity/core-tests/Tests                            # the Unity package's engine-free core
