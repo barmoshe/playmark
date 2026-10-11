@@ -124,6 +124,31 @@ That copies `addons/playmark` into the project, enables it and git-ignores `.pla
 Run the game from Godot and press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>M</kbd>. Update later with
 `claude plugin update playmark`.
 
+### Codex
+
+Codex uses the same Godot addon, mark files, and Node helpers. From a terminal
+with a current Codex CLI:
+
+```sh
+codex plugin marketplace add barmoshe/playmark
+codex plugin add playmark@playmark
+```
+
+Start a new Codex session in your game repository. Ask: **Use the playmark skill
+to install Playmark in this Godot project.** Then run the game, press
+**Ctrl+Shift+M**, add a pin and note, and save the mark. Ask: **Use playmark to
+triage my marks.** Codex reads the annotated frame, recent frames, logs and scene
+context before it changes code.
+
+Codex support covers installation and feedback triage in an existing game.
+The `/playmark:new` command and automatic new-mark notices remain Claude Code
+features. Codex reads the inbox on request and installs no lifecycle hooks.
+Use one agent per mark when both clients work in the same project.
+
+To test a local checkout, replace `barmoshe/playmark` in the marketplace command
+with its absolute path. Keep the whole package; the skill needs the sibling
+`scripts/` and `addons/` directories. Restart the Codex session after installation.
+
 ### Or start a new game with it
 
 ```

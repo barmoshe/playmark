@@ -1,0 +1,25 @@
+{
+  "name": "playmark",
+  "version": "0.3.0",
+  "description": "Read Godot playtest marks, inspect their frames and scene context, and fix the reported issue with Claude Code or Codex.",
+  "author": {
+    "name": "Bar Moshe"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/barmoshe/playmark",
+  "repository": "https://github.com/barmoshe/playmark",
+  "keywords": [
+    "godot",
+    "gamedev",
+    "playtest",
+    "feedback",
+    "screenshot",
+    "annotation"
+  ],
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "extensions": {
+    "com.openai": {
+      "hooks": []
+    }
+  }
+}
