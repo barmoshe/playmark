@@ -11,7 +11,7 @@
 ![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-f2621b)
 [![MIT](https://img.shields.io/badge/license-MIT-lightgrey)](LICENSE)
 
-[Quick start](#quick-start) · [A real example](#a-real-example-redesigning-an-enemy) · [What Claude gets](#what-a-mark-contains) · [Changelog](CHANGELOG.md)
+[Watch](#watch-it-work) · [Quick start](#quick-start) · [A real example](#a-real-example-redesigning-an-enemy) · [What Claude gets](#what-a-mark-contains) · [Changelog](CHANGELOG.md)
 
 <br>
 
@@ -26,6 +26,18 @@ Playmark is a Godot addon plus a Claude Code plugin for exactly that moment. Pre
 <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>M</kbd>: the game freezes, you pin what you mean and write one
 line. Claude Code gets the frame, the last five seconds, the log and the code under your pin,
 and fixes it. Back in the game, a toast says "Fixed" and a marker stays where you left the note.
+
+## Watch it work
+
+Three short films, narrated and captioned. Click a frame to play it; each also comes in Hebrew.
+
+<table>
+<tr>
+<td align="center" width="33%"><a href="film/showcase/videos/playmark-color-en.mp4"><img src="docs/video-color.jpg" width="300" alt="Video: a pin on the teal square Boxy with the note 'Boxy should be orange' in the Playmark overlay"></a><br><b>The loop in 16 s</b><br><sub>Mark a shape, Claude fixes it, retest.<br><a href="film/showcase/videos/playmark-color-en.mp4">English</a> · <a href="film/showcase/videos/playmark-color-he.mp4">עברית</a></sub></td>
+<td align="center" width="33%"><a href="film/showcase/videos/playmark-thornback-en.mp4"><img src="docs/video-thornback.jpg" width="300" alt="Video: a box drawn around the Thornback enemy in Wandcraft with the note to redesign it as a charging ram"></a><br><b>Redesigning an enemy, 23 s</b><br><sub>The Thornback from Wandcraft, one mark.<br><a href="film/showcase/videos/playmark-thornback-en.mp4">English</a> · <a href="film/showcase/videos/playmark-thornback-he.mp4">עברית</a></sub></td>
+<td align="center" width="33%"><a href="film/showcase/videos/playmark-star-dodger-en.mp4"><img src="docs/video-star-dodger.jpg" width="300" alt="Video: Star Dodger, a small space game with a ship dodging asteroids, with a Playmark ghost marker on screen"></a><br><b>A game built by marking, 55 s</b><br><sub>Star Dodger: blank project, four marks.<br><a href="film/showcase/videos/playmark-star-dodger-en.mp4">English</a> · <a href="film/showcase/videos/playmark-star-dodger-he.mp4">עברית</a></sub></td>
+</tr>
+</table>
 
 ## How it works
 
