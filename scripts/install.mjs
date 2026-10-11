@@ -19,6 +19,12 @@ const godotSource = path.join(pluginRoot, "addons", "playmark");
 const unitySource = path.join(pluginRoot, "unity", "com.bar-builds.playmark");
 const UNITY_PACKAGE = "com.bar-builds.playmark";
 const args = process.argv.slice(2);
+// Any other flag (--help included) must not fall through to installing into the current folder.
+if (args.some((a) => a.startsWith("-") && a !== "--git")) {
+  const help = args.includes("--help") || args.includes("-h");
+  (help ? console.log : console.error)("Usage: install.mjs [path] [--git]\n  path: the Godot or Unity project, or a repo with it one level down (default: the current folder)\n  --git: Unity only, reference the package by git URL instead of copying it");
+  process.exit(help ? 0 : 2);
+}
 const useGit = args.includes("--git");
 const start = path.resolve(args.find((a) => !a.startsWith("--")) ?? process.cwd());
 

@@ -10,9 +10,10 @@ and a marker stays where you left the note.
 This is the Unity side of [Playmark](../README.md). It writes the same mark folders as the Godot
 addon, so `/playmark:triage` and the rest of the Claude Code plugin work the same.
 
-> **Status: new and not yet verified in a running Unity Editor.** The package compiles against Unity
-> 6000.0 in CI (with and without the optional modules) and its engine-free core is unit tested, but
-> nobody has pressed Play with it yet. See [What to check first](#what-to-check-first).
+> **Status: beta.** Checked by hand in Unity 6000.3 LTS on a Mac (Metal): Built-in with Gamma color,
+> the old Input Manager, the Input System and "Both"; smoke, snapshot and saved images on URP and in
+> Linear color. Known: in Linear-color projects (every URP project) the overlay draws washed out,
+> though the saved images are right. Open items are GitHub issues. Godot is the main addon.
 
 ## Install
 
@@ -161,6 +162,8 @@ frame hides them), as in the Godot addon.
 ```bash
 dotnet test unity/core-tests/Tests          # Core: inbox, JSON, PNG, images, sounds
 node unity/check/compile.mjs --unity <Editor/Data> --inputsystem <com.unity.inputsystem>
+# on a Mac: --unity /Applications/Unity/Hub/Editor/<version>/Unity.app
+#           --inputsystem <project>/Library/PackageCache/com.unity.inputsystem@<hash>
 node scripts/unity-metas.mjs write          # after adding a file to the package
 ```
 

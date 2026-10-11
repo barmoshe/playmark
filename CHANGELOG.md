@@ -1,8 +1,10 @@
 # Changelog
 
-## Unreleased
+## 0.4.0
 
-- **Unity.** A Unity 6 package (`unity/com.bar-builds.playmark`) that writes the same marks as the Godot addon: freeze and mark with an IMGUI overlay, a 5 s rewind kept on the GPU, the colliders, renderers, uGUI and UI Toolkit elements under each mark with their script assets and prefabs, ghosts in 2D and 3D, toasts when Claude claims or fixes a mark, errors as automatic bug marks, warp and smoke runs through the open Editor, Project Settings, and a Toy sample. `/playmark:install` detects a Unity project and embeds the package (`--git` pins a git URL instead). In Unity, ghosts toggle with Ctrl+Shift+J (Ctrl/Cmd+Shift+G is Unity's Create Empty Parent). New and not yet run in a real Editor; see `unity/README.md`.
+- **Unity.** A Unity 6 package (`unity/com.bar-builds.playmark`) that writes the same marks as the Godot addon: freeze and mark with an IMGUI overlay, a 5 s rewind kept on the GPU, the colliders, renderers, uGUI and UI Toolkit elements under each mark with their script assets and prefabs, ghosts in 2D and 3D, toasts when Claude claims or fixes a mark, errors as automatic bug marks, warp and smoke runs through the open Editor, Project Settings, and a Toy sample. `/playmark:install` detects a Unity project and embeds the package (`--git` pins a git URL instead). In Unity, ghosts toggle with Ctrl+Shift+J (Ctrl/Cmd+Shift+G is Unity's Create Empty Parent). Beta: checked in Unity 6000.3 LTS on a Mac (Built-in, URP, both input systems); known issues are on GitHub. See `unity/README.md`.
+- Unity fixes from the first real Editor run: Unity's own errors no longer become auto-marks or stall a smoke run, unattended runs carry on through Error Pause, clip frames are upright on Metal, a mark points at the file that declares a component, shortcut hints read CTRL+SHIFT+J, `unity/check/compile.mjs` takes a Mac `Unity.app`.
+- `inbox.mjs smoke` works right after install, before the game has been played. `install.mjs --help` prints usage instead of installing into the current folder.
 - One mark format for both engines: `schema: 2`, `engine: {name, version}`. Older Godot marks (engine as a string) still read.
 - `inbox.mjs smoke`: an unattended play, mark, save run, for Godot and Unity. `inbox.mjs show` names the engine and, for Unity, the prefab.
 - CI builds the Unity package's engine-free core with `dotnet test`, compiles the whole package against Unity 6000.0's own assemblies (with and without the physics modules and the Input System), and checks every `.meta` file.
