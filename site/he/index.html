@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Playmark: מסמנים תוך כדי משחק, Claude מתקן</title>
+  <meta name="description" content="תוסף ל-Godot ופלאגין ל-Claude Code. לוחצים Ctrl+Shift+M במשחק שרץ, מסמנים מה לא בסדר וכותבים שורה. Claude Code מקבל את הפריים, את חמש השניות האחרונות, את הלוג ואת הקוד שמתחת לסימון.">
+  <link rel="canonical" href="https://playmark.bar-builds.com/he">
+  <link rel="alternate" hreflang="en" href="https://playmark.bar-builds.com/">
+  <link rel="alternate" hreflang="he" href="https://playmark.bar-builds.com/he">
+  <link rel="alternate" hreflang="x-default" href="https://playmark.bar-builds.com/">
+  <meta name="theme-color" content="#111111">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/media/icon-512.png">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="he_IL">
+  <meta property="og:url" content="https://playmark.bar-builds.com/he">
+  <meta property="og:title" content="Playmark: מסמנים תוך כדי משחק, Claude מתקן">
+  <meta property="og:description" content="תוסף ל-Godot ופלאגין ל-Claude Code לפידבק תוך כדי משחק. מקפיאים את הפריים, מסמנים, כותבים שורה. Claude מתקן, והמשחק מודיע.">
+  <meta property="og:image" content="https://playmark.bar-builds.com/media/og.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="preload" href="/fonts/heebo-hebrew.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<a class="skip" href="#main">דילוג לתוכן</a>
+
+<header class="masthead">
+  <div class="wrap masthead-row">
+    <a class="brand" href="#top" aria-label="Playmark, לראש העמוד">
+      <img src="/favicon.svg" width="34" height="34" alt="">
+      <span>Playmark</span>
+    </a>
+    <nav aria-label="חלקי העמוד">
+      <a href="#how">איך זה עובד</a>
+      <a href="#try">לנסות</a>
+      <a href="#install">התקנה</a>
+      <a class="gh" href="https://github.com/barmoshe/playmark">GitHub <span class="stars" data-stars hidden></span></a>
+    </nav>
+    <div class="lang-toggle" role="group" aria-label="שפה">
+      <a href="/" hreflang="en" lang="en" data-lang="en">EN</a>
+      <a href="/he" hreflang="he" lang="he" data-lang="he" aria-current="page">עב</a>
+    </div>
+  </div>
+  <div class="wrap"><div class="double-rule" aria-hidden="true"></div></div>
+</header>
+
+<main id="main" tabindex="-1">
+
+  <section class="hero wrap" id="top">
+    <div class="hero-grid">
+      <div class="hero-copy">
+        <p class="kicker">תוסף ל-Godot + פלאגין ל-Claude Code</p>
+        <h1>מסמנים תוך כדי משחק. Claude מתקן.</h1>
+        <div class="cast" aria-hidden="true">
+          <span class="toy sun"></span><span class="toy box"></span><span class="toy peak"></span><span class="toy nut"></span>
+        </div>
+        <p class="deck">לוחצים
+          <span class="keys" dir="ltr"><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>M</kbd></span>
+          במשחק Godot שרץ, מסמנים מה לא בסדר וכותבים שורה. Claude Code מקבל את הפריים, את חמש השניות האחרונות, את הלוג ואת הקוד שמתחת לסימון.</p>
+        <div class="ctas">
+          <a class="btn primary" href="#try">לנסות כאן</a>
+          <a class="btn" href="#install">התקנה <span aria-hidden="true">←</span></a>
+        </div>
+        <p class="meta"><span data-version>v0.3.0</span><span>Godot 4.5+</span><span>MIT</span><a href="https://github.com/barmoshe/playmark/blob/main/CHANGELOG.md">Changelog</a></p>
+      </div>
+      <figure class="frame hero-video">
+        <span class="tag">הוקלט ב-Godot</span>
+        <video id="hero-video" autoplay muted loop playsinline preload="metadata" poster="/media/poster.jpg" aria-describedby="hero-video-desc">
+          <source src="/media/hero.webm" type="video/webm">
+          <source src="/media/hero.mp4" type="video/mp4">
+        </video>
+        <p class="sr-only" id="hero-video-desc">Playmark בסצנת צעצוע ב-Godot: סימון על הריבוע הטורקיז, ההערה "Boxy should be orange", שמירה; אחר כך הריבוע הופך לכתום והודעה אומרת Fixed #1.</p>
+        <button class="video-toggle" type="button" data-video-toggle aria-pressed="false">השהיה</button>
+        <i class="crop tl"></i><i class="crop tr"></i><i class="crop bl"></i><i class="crop br"></i>
+      </figure>
+    </div>
+  </section>
+
+  <section class="how wrap" id="how" aria-labelledby="how-title">
+    <h2 id="how-title" class="kicker section-kicker">איך זה עובד</h2>
+    <ol class="steps">
+      <li>
+        <span class="num" aria-hidden="true">01</span>
+        <h3>משחקים</h3>
+        <p>Playmark שומר את חמש השניות האחרונות בזמן המשחק.</p>
+      </li>
+      <li>
+        <span class="num" aria-hidden="true">02</span>
+        <h3>מסמנים</h3>
+        <p><span dir="ltr"><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>M</kbd></span> מקפיא את הפריים. קליק לסיכה, גרירה למסגרת, 1 עד 5 לקטגוריה, ואז הערה.</p>
+      </li>
+      <li>
+        <span class="num" aria-hidden="true">03</span>
+        <h3>Claude מתקן</h3>
+        <p>הפרומפט הבא ב-Claude Code מזכיר את הסימון. <code>/playmark:triage</code> מוצא את הקוד שמתחת לסיכה ומציע תיקון, ובוחרים מה לתקן.</p>
+      </li>
+      <li>
+        <span class="num" aria-hidden="true">04</span>
+        <h3>בודקים שוב</h3>
+        <p>המשחק מראה "Fixed #3" ומשאיר סמן במקום הסימון.</p>
+      </li>
+    </ol>
+  </section>
+
+  <section class="try" id="try" aria-labelledby="try-title">
+    <div class="wrap">
+      <p class="kicker">לנסות</p>
+      <h2 id="try-title">סימון אחד, תיקון אחד.</h2>
+      <p class="deck narrow">הרצה מודרכת על סצנת צעצוע, אותו תהליך כמו ב-Godot. בוחרים שינוי, חמישה צעדים.</p>
+      <div class="scenarios" role="group" aria-label="בחירת שינוי">
+        <button type="button" data-scenario="color" aria-selected="true"><span class="sw sw-box" aria-hidden="true"></span>צבע <small>Boxy נהיה כתום</small></button>
+        <button type="button" data-scenario="shape" aria-selected="false"><span class="sw sw-peak" aria-hidden="true"></span>צורה <small>Pointy הופך לכוכב</small></button>
+        <button type="button" data-scenario="motion" aria-selected="false"><span class="sw sw-nut" aria-hidden="true"></span>תנועה <small>Nutty לומד לקפוץ</small></button>
+      </div>
+
+      <div class="demo" data-demo>
+        <div class="demo-bar">
+          <ol class="pips">
+            <li data-pip="0">הקפאה</li><li data-pip="1">סיכה</li><li data-pip="2">חותמת</li><li data-pip="3">שמירה</li><li data-pip="4">Claude</li>
+          </ol>
+          <button class="btn small" type="button" data-restart>מההתחלה <kbd>Esc</kbd></button>
+        </div>
+
+        <div class="demo-grid">
+          <div class="stage-wrap">
+            <div class="stage" data-stage>
+              <canvas data-canvas width="960" height="540" aria-label="סצנת צעצוע: ארבע צורות עם פרצופים שזזות במקום. משמאל: Sunny העיגול הצהוב, Boxy הריבוע הטורקיז, Pointy המשולש הוורוד, Nutty המשושה הכחול." role="img"></canvas>
+              <div class="flash" data-flash></div>
+              <div class="freeze-tag" data-freeze-tag>Freeze</div>
+              <div class="stamp" data-stamp><strong>Marked #1</strong><span data-stamp-sub>Art</span></div>
+              <div class="toast" data-toast role="status">
+                <span class="toast-kicker">Fixed by Claude</span>
+                <strong data-toast-title>Fixed #1</strong>
+                <span data-toast-body>Boxy: #2EC4B6 → #FF8A1F in look.gd</span>
+              </div>
+              <div class="coach" data-coach aria-hidden="true"></div>
+            </div>
+            <div class="deck-row" data-deck>
+              <div class="chips" role="group" aria-label="קטגוריה">
+                <button type="button" data-cat="0" disabled><kbd>1</kbd> Bug</button>
+                <button type="button" data-cat="1" disabled><kbd>2</kbd> Feel</button>
+                <button type="button" data-cat="2" disabled><kbd>3</kbd> Art</button>
+                <button type="button" data-cat="3" disabled><kbd>4</kbd> Balance</button>
+                <button type="button" data-cat="4" disabled><kbd>5</kbd> Idea</button>
+              </div>
+              <div class="note" data-note aria-live="polite"><span class="placeholder">מה לא בסדר?</span></div>
+              <button class="btn primary save" type="button" data-save disabled>Save mark <kbd>↵</kbd></button>
+            </div>
+          </div>
+
+          <aside class="side">
+            <p class="step-now" data-step-text aria-live="polite">לוחצים <kbd>M</kbd> או הקפאה כדי לעצור את הפריים.</p>
+            <button class="btn primary" type="button" data-freeze>הקפאה <kbd>M</kbd></button>
+            <div class="term" data-term role="log" aria-live="polite" aria-label="Claude Code">
+              <div class="term-head"><span>Claude Code</span><span>~/shapes</span></div>
+              <div class="term-body" data-term-body></div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Watch it -->
+  <section class="watch wrap" id="watch" aria-labelledby="watch-title">
+    <p class="kicker">עם סאונד</p>
+    <h2 id="watch-title">לראות את זה</h2>
+    <p class="deck narrow">שני סרטונים קצרים, מוקלטים בתוך המשחק. השני הוא ה-Thornback מ-Wandcraft, למטה.</p>
+    <div class="watch-grid">
+      <figure class="frame watch-video">
+        <video controls playsinline preload="none" width="1920" height="1080" poster="/media/watch-color-he-poster.jpg" aria-describedby="watch-1-desc">
+          <source src="/media/watch-color-he.mp4" type="video/mp4">
+        </video>
+        <p class="sr-only" id="watch-1-desc">סרטון: סיכה על Boxy בחלון של Playmark עם ההערה, ואז Claude משנה שורה אחת ו-Boxy נהיה כתום</p>
+        <i class="crop tl"></i><i class="crop tr"></i><i class="crop bl"></i><i class="crop br"></i>
+        <figcaption>סיכה על Boxy, הערה, שורת קוד אחת. 16 שניות.</figcaption>
+      </figure>
+      <figure class="frame watch-video">
+        <video controls playsinline preload="none" width="1920" height="1080" poster="/media/watch-thornback-he-poster.jpg" aria-describedby="watch-2-desc">
+          <source src="/media/watch-thornback-he.mp4" type="video/mp4">
+        </video>
+        <p class="sr-only" id="watch-2-desc">סרטון: קופסה סביב ה-Thornback בקרב ב-Wandcraft עם בקשה לאיל מסתער, ואז ה-Thornback המצויר מחדש ולפני ואחרי</p>
+        <i class="crop tl"></i><i class="crop tr"></i><i class="crop bl"></i><i class="crop br"></i>
+        <figcaption>עיצוב מחדש של ה-Thornback ב-Wandcraft: הסימון, הציור מחדש, לפני ואחרי. 23 שניות.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="real wrap" aria-labelledby="real-title">
+    <p class="kicker">במשחק אמיתי</p>
+    <h2 id="real-title">עיצוב מחדש של אויב ב-Wandcraft</h2>
+    <p class="deck narrow">Wandcraft הוא רוגלייט בפיקסל ארט. ה-Thornback שלו, אויב שמסתער עליך, נראה כמו כיכר לחם. סימון אחד, באמצע קרב:</p>
+    <blockquote class="prompt" dir="ltr">Redesign the Thornback: make it look like a charging ram, with curled horns, thorns along its back and a glowing eye.</blockquote>
+    <div class="real-grid">
+      <figure class="frame">
+        <img src="/media/thornback-mark.jpg" width="1280" height="837" loading="lazy" alt="שכבת Playmark מעל קרב ב-Wandcraft: מסגרת כחולה סביב ה-Thornback, חותמת ART וההערה">
+        <i class="crop tl"></i><i class="crop tr"></i><i class="crop bl"></i><i class="crop br"></i>
+        <figcaption>הסימון: מסגרת סביב ה-Thornback, ART, ההערה.</figcaption>
+      </figure>
+      <ol class="real-steps">
+        <li><strong>המסגרת מצאה את הנוד.</strong> <code>enemy.gd</code> מסוג <code>ram</code>, יחד עם מצב הריצה: החדר, הגל, החיים והשרביט.</li>
+        <li><strong>Claude מצא את הארט.</strong> 16 שורות של פיקסלים ב-<code>bestiary.gd</code>, לפי חוקי הפלטה של המשחק.</li>
+        <li><strong>הציור מחדש.</strong> גב גבנוני, קוצים, קרן מסולסלת ועין זוהרת.</li>
+        <li><strong>בחזרה לקרב.</strong> "Fixed #1", והסמן נשאר במקום הסימון.</li>
+      </ol>
+    </div>
+    <figure class="before-after">
+      <img src="/media/thornback-before-after.png" width="1280" height="420" loading="lazy" alt="לפני: כיכר חומה שטוחה עם שלושה עלים ירוקים. אחרי: חיה גבנונית עם קוצים בהירים, קרן מסולסלת, עין כתומה זוהרת וחזה צמרי.">
+    </figure>
+    <figure class="frame real-video">
+      <span class="tag">הוקלט ב-Wandcraft</span>
+      <video muted loop playsinline preload="none" poster="/media/thornback-poster.jpg" data-lazy-video aria-describedby="thornback-video-desc">
+        <source src="/media/thornback.webm" type="video/webm">
+        <source src="/media/thornback.mp4" type="video/mp4">
+      </video>
+      <p class="sr-only" id="thornback-video-desc">הקרב אחרי התיקון: ה-Thornback החדש מסתער והודעה אומרת Fixed #1.</p>
+      <button class="video-toggle" type="button" data-lazy-toggle aria-pressed="true">הפעלה</button>
+      <i class="crop tl"></i><i class="crop tr"></i><i class="crop bl"></i><i class="crop br"></i>
+    </figure>
+  </section>
+
+  <section class="gets wrap" aria-labelledby="gets-title">
+    <p class="kicker">הסימון</p>
+    <h2 id="gets-title">מה Claude מקבל</h2>
+    <p class="deck narrow">כל סימון הוא תיקייה ב-<code>.playmark/inbox</code>, מחוץ ל-git כברירת מחדל. זה הסימון האמיתי מהסרטון.</p>
+    <div class="gets-grid">
+      <figure class="frame">
+        <img src="/media/annotated.jpg" width="960" height="540" loading="lazy" alt="annotated.png: הפריים הקפוא של ארבע הצורות עם סיכה מספר 1 על הריבוע הטורקיז">
+        <figcaption><code>annotated.png</code> הפריים, עם סיכות ממוספרות</figcaption>
+      </figure>
+      <div class="files">
+        <ul class="tree">
+          <li><code>annotated.png</code><span>הפריים, עם סיכות ממוספרות</span></li>
+          <li><code>clip_sheet.png</code><span>השניות האחרונות, מהישן לחדש</span></li>
+          <li><code>log.txt</code><span>אזהרות ושגיאות</span></li>
+          <li><code>mark.json</code><span>ההערה, הסצנה, הנודים והסקריפטים שמתחת לכל סיכה, מצב המשחק</span></li>
+        </ul>
+<pre class="json" tabindex="0" dir="ltr"><code>{
+  "seq": 1,
+  "category": "art",
+  "note": "Boxy should be orange",
+  "marks": [{ "type": "pin", "x": 750, "y": 536 }],
+  "scene": { "path": "res://shapes.tscn" },
+  "under_marks": [{
+    "mark": 1,
+    "physics": [{
+      "path": "Boxy",
+      "class": "Area2D",
+      "script": "res://shape.gd"
+    }]
+  }],
+  "context": { "look": [ … ] }
+}</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <section class="features wrap" aria-labelledby="features-title">
+    <p class="kicker">בפנים</p>
+    <h2 id="features-title">מה זה עושה</h2>
+    <ul class="feature-grid">
+      <li><h3>חזרה אחורה</h3><p>פספסת את הרגע? חוזרים עד חמש שניות אחורה ומסמנים את הפריים הנכון.</p></li>
+      <li><h3>הקוד שמתחת לסיכה</h3><p>קוליידרים, נודים, סקריפטים ופקדי UI, לכל סיכה ומסגרת.</p></li>
+      <li><h3>רוחות</h3><p>סימונים קודמים נשארים בעולם, במקום שבו נעשו. כתום זה פתוח, כחול זה תוקן.</p></li>
+      <li><h3>שגיאות מסמנות את עצמן</h3><p>שגיאת סקריפט הופכת לסימון באג, עם הקליפ והלוג.</p></li>
+      <li><h3>חזרה לסימון</h3><p>פותחים את המשחק בדיוק בנקודת הסימון. Claude יכול לצלם פריים ולבדוק את התיקון.</p></li>
+      <li><h3>המצב של המשחק</h3><p>שורה אחת מוסיפה לכל סימון את השחקן, השלב או הציוד.</p></li>
+      <li><h3>חד בכל רזולוציה</h3><p>שכבת הסימון היא חלון נפרד, אז גם משחקי פיקסל ארט נקראים טוב.</p></li>
+      <li><h3>רק בבילדים של פיתוח</h3><p>שום דבר לא רץ בגרסת release, אלא אם מפעילים את זה.</p></li>
+    </ul>
+  </section>
+
+  <section class="install wrap" id="install" aria-labelledby="install-title">
+    <p class="kicker">התקנה</p>
+    <h2 id="install-title">שלוש פקודות ב-Claude Code</h2>
+    <ol class="cmds">
+      <li><code data-cmd>/plugin marketplace add barmoshe/playmark</code><button type="button" class="copy" data-copy>העתקה</button></li>
+      <li><code data-cmd>/plugin install playmark@playmark</code><button type="button" class="copy" data-copy>העתקה</button></li>
+      <li><code data-cmd>/playmark:install</code><span class="where">בריפו של המשחק</span><button type="button" class="copy" data-copy>העתקה</button></li>
+    </ol>
+    <p class="meta reqs"><span>Godot 4.5+</span><span>Claude Code</span><span>Node 18+</span><span>דסקטופ, נבדק על macOS</span></p>
+    <p class="small-print">בלי Claude Code: מעתיקים את <code>addons/playmark</code> לפרויקט ומפעילים ב-Project Settings, Plugins. עדכונים: <code>claude plugin update playmark</code>.</p>
+  </section>
+
+  <section class="newgame wrap" id="new" aria-labelledby="new-title">
+    <p class="kicker">מאפס</p>
+    <h2 id="new-title">להתחיל איתו משחק חדש</h2>
+    <p class="deck narrow">פרויקט Godot ריק עם Playmark כבר בפנים: סצנה אחת שאפשר לשחק, <code>CLAUDE.md</code> שמלמד את הלולאה, וקומיט ראשון. אומרים איזה משחק לבנות, משחקים כל צעד ומסמנים מה לא בסדר.</p>
+    <ol class="cmds">
+      <li><code data-cmd>/playmark:new star-dodger --name "Star Dodger"</code><button type="button" class="copy" data-copy>העתקה</button></li>
+    </ol>
+    <ol class="loop-steps">
+      <li><strong>בונים צעד.</strong> מכניקה אחת, אויב אחד, מסך אחד.</li>
+      <li><strong>משחקים.</strong> <span dir="ltr"><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>M</kbd></span> על מה שלא בסדר.</li>
+      <li><strong>טריאז'.</strong> <code>/playmark:triage</code> מתקן את מה שבוחרים.</li>
+      <li><strong>קומיט.</strong> ואז הצעד הבא.</li>
+    </ol>
+    <figure class="frame newgame-video">
+      <span class="tag">נבנה מפרויקט ריק</span>
+      <video controls playsinline preload="none" width="1920" height="1080" poster="/media/star-dodger-he-poster.jpg" aria-describedby="star-dodger-desc">
+        <source src="/media/star-dodger-he.mp4" type="video/mp4">
+      </video>
+      <p class="sr-only" id="star-dodger-desc">סרטון: פרויקט Godot ריק, Star Dodger הראשון שאפשר לשחק, ואז ארבעה סימונים (מטאוריטים אדומים, חללית שמחליקה, מטאוריטים שמאיצים עם הניקוד, רעידה וניצוצות בפגיעה), כל אחד עם התיקון שלו</p>
+      <i class="crop tl"></i><i class="crop tr"></i><i class="crop bl"></i><i class="crop br"></i>
+      <figcaption>Star Dodger נבנה ככה: פרויקט ריק, שלב ראשון, ואז ארבעה סימונים תוך כדי משחק, כל אחד תוקן בשורה אחת ב-<code>tune.gd</code>. 55 שניות. המשחק: <a href="https://github.com/barmoshe/star-dodger">github.com/barmoshe/star-dodger</a>.</figcaption>
+    </figure>
+  </section>
+
+  <section class="why wrap" aria-labelledby="why-title">
+    <h2 id="why-title" class="kicker">למה</h2>
+    <blockquote>
+      <p>בניתי את Playmark תוך כדי עבודה על Wandcraft, רוגלייט שבו מתכנתים את השרביט. כשבדקתי את המשחק שלי, כל הזמן שמתי לב לדברים קטנים שלא רציתי לעצור בשבילם ולכתוב. עכשיו אני לוחץ על מקש, מצביע וממשיך לשחק.</p>
+      <footer><img src="/media/b-mark.svg" width="22" height="22" alt=""> בר משה</footer>
+    </blockquote>
+  </section>
+</main>
+
+<footer class="site-footer wrap">
+  <div class="double-rule" aria-hidden="true"></div>
+  <p class="meta">
+    <span>MIT</span>
+    <a href="https://github.com/barmoshe/playmark">GitHub</a>
+    <a href="https://github.com/barmoshe/playmark/blob/main/CHANGELOG.md">Changelog</a>
+    <span>נבנה על ידי בר משה ב-<a href="https://bar-builds.com">bar-builds.com</a></span>
+  </p>
+</footer>
+
+<script src="/site.js" defer></script>
+<script src="/demo.js" defer></script>
+</body>
+</html>

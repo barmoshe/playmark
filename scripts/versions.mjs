@@ -8,9 +8,12 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const PLACES = [
+  { file: "plugin.json", re: /("version":\s*")([^"]+)(")/ },
   { file: ".claude-plugin/plugin.json", re: /("version":\s*")([^"]+)(")/ },
   { file: "addons/playmark/plugin.cfg", re: /(version=")([^"]+)(")/ },
   { file: "addons/playmark/playmark.gd", re: /(const VERSION := ")([^"]+)(")/ },
+  { file: "unity/com.bar-builds.playmark/package.json", re: /("version":\s*")([^"]+)(")/ },
+  { file: "unity/com.bar-builds.playmark/Runtime/Playmark.cs", re: /(public const string Version = ")([^"]+)(")/ },
 ];
 
 const read = (f) => fs.readFileSync(path.join(root, f), "utf8");

@@ -1,0 +1,36 @@
+{
+  "name": "com.bar-builds.playmark",
+  "version": "0.3.0",
+  "displayName": "Playmark",
+  "description": "Mark what you see while playing your Unity game, write a note, and hand it to Claude Code: the frame, the last seconds of play, the log and the scripts under your pin. Fixes show up in the game.",
+  "unity": "6000.0",
+  "license": "MIT",
+  "documentationUrl": "https://github.com/barmoshe/playmark/tree/main/unity#readme",
+  "changelogUrl": "https://github.com/barmoshe/playmark/blob/main/CHANGELOG.md",
+  "licensesUrl": "https://github.com/barmoshe/playmark/blob/main/LICENSE",
+  "keywords": [
+    "playtest",
+    "feedback",
+    "screenshot",
+    "annotation",
+    "claude",
+    "ai"
+  ],
+  "author": {
+    "name": "Bar Moshe",
+    "url": "https://playmark.bar-builds.com"
+  },
+  "dependencies": {
+    "com.unity.ugui": "2.0.0",
+    "com.unity.modules.imgui": "1.0.0",
+    "com.unity.modules.audio": "1.0.0",
+    "com.unity.modules.uielements": "1.0.0"
+  },
+  "samples": [
+    {
+      "displayName": "Toy scene",
+      "description": "Four shapes and one table of looks. Mark a shape (\"Boxy should be orange\") and let Claude Code change it.",
+      "path": "Samples~/Toy"
+    }
+  ]
+}

@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Playmark: mark it while you play, Claude fixes it</title>
+  <meta name="description" content="A Godot addon and Claude Code plugin. Press Ctrl+Shift+M in your running game, pin what's wrong and write a line. Claude Code gets the frame, the last five seconds, the log and the code under your pin.">
+  <link rel="canonical" href="https://playmark.bar-builds.com/">
+  <link rel="alternate" hreflang="en" href="https://playmark.bar-builds.com/">
+  <link rel="alternate" hreflang="he" href="https://playmark.bar-builds.com/he">
+  <link rel="alternate" hreflang="x-default" href="https://playmark.bar-builds.com/">
+  <meta name="theme-color" content="#111111">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/media/icon-512.png">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://playmark.bar-builds.com/">
+  <meta property="og:title" content="Playmark: mark it while you play, Claude fixes it">
+  <meta property="og:description" content="A Godot addon and Claude Code plugin for playtest feedback. Freeze the frame, pin it, write a line. Claude fixes it, and the game tells you.">
+  <meta property="og:image" content="https://playmark.bar-builds.com/media/og.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="preload" href="/fonts/heebo-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/styles.css">
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Playmark","applicationCategory":"DeveloperApplication","operatingSystem":"macOS, Windows, Linux","softwareVersion":"0.2.0","license":"https://opensource.org/licenses/MIT","url":"https://playmark.bar-builds.com/","codeRepository":"https://github.com/barmoshe/playmark","description":"A Godot addon and Claude Code plugin for playtest feedback.","author":{"@type":"Person","name":"Bar Moshe","url":"https://bar-builds.com"},"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}
+  </script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="masthead">
+  <div class="wrap masthead-row">
+    <a class="brand" href="#top" aria-label="Playmark, top of page">
+      <img src="/favicon.svg" width="34" height="34" alt="">
+      <span>Playmark</span>
+    </a>
+    <nav aria-label="Sections">
+      <a href="#how">How it works</a>
+      <a href="#try">Try it</a>
+      <a href="#install">Install</a>
+      <a class="gh" href="https://github.com/barmoshe/playmark">GitHub <span class="stars" data-stars hidden></span></a>
+    </nav>
+    <div class="lang-toggle" role="group" aria-label="Language">
+      <a href="/" hreflang="en" lang="en" data-lang="en" aria-current="page">EN</a>
+      <a href="/he" hreflang="he" lang="he" data-lang="he">עב</a>
+    </div>
+  </div>
+  <div class="wrap"><div class="double-rule" aria-hidden="true"></div></div>
+</header>
+
+<main id="main" tabindex="-1">
+
+  <!-- Hero -->
+  <section class="hero wrap" id="top">
+    <div class="hero-grid">
+      <div class="hero-copy">
+        <p class="kicker">Godot addon + Claude Code plugin</p>
+        <h1>Mark it while you play. Claude fixes it.</h1>
+        <div class="cast" aria-hidden="true">
+          <span class="toy sun"></span><span class="toy box"></span><span class="toy peak"></span><span class="toy nut"></span>
+        </div>
+        <p class="deck">Press
+          <span class="keys"><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>M</kbd></span>
+          in your running Godot game. Pin what's wrong and write a line. Claude Code gets the frame, the last five seconds, the log and the code under your pin.</p>
+        <div class="ctas">
+          <a class="btn primary" href="#try">Try it here</a>
+          <a class="btn" href="#install">Install <span aria-hidden="true">→</span></a>
+        </div>
+        <p class="meta"><span data-version>v0.3.0</span><span>Godot 4.5+</span><span>MIT</span><a href="https://github.com/barmoshe/playmark/blob/main/CHANGELOG.md">Changelog</a></p>
+      </div>
+      <figure class="frame hero-video">
+        <span class="tag">Recorded in Godot</span>
+        <video id="hero-video" autoplay muted loop playsinline preload="metadata" poster="/media/poster.jpg" aria-describedby="hero-video-desc">
+          <source src="/media/hero.webm" type="video/webm">
+          <source src="/media/hero.mp4" type="video/mp4">
+        </video>
+        <p class="sr-only" id="hero-video-desc">Playmark in a toy Godot scene: a pin on the teal square, the note 'Boxy should be orange', saved; then the square turns orange and a toast says Fixed #1</p>
+        <button class="video-toggle" type="button" data-video-toggle aria-pressed="false">Pause</button>
+        <i class="crop tl"></i><i class="crop tr"></i><i class="crop bl"></i><i class="crop br"></i>
+      </figure>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section class="how wrap" id="how" aria-labelledby="how-title">
+    <h2 id="how-title" class="kicker section-kicker">How it works</h2>
+    <ol class="steps">
+      <li>
+        <span class="num" aria-hidden="true">01</span>
+        <h3>Play</h3>
+        <p>Playmark keeps the last five seconds while you play.</p>
+      </li>
+      <li>
+        <span class="num" aria-hidden="true">02</span>
+        <h3>Mark</h3>
+        <p><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>M</kbd> freezes the frame. Click to pin, drag to box, 1 to 5 for a category, then a note.</p>
+      </li>
+      <li>
+        <span class="num" aria-hidden="true">03</span>
+        <h3>Claude fixes</h3>
+        <p>Your next prompt in Claude Code mentions the mark. <code>/playmark:triage</code> finds the code under your pin and proposes a fix. You say which.</p>
+      </li>
+      <li>
+        <span class="num" aria-hidden="true">04</span>
+        <h3>Retest</h3>
+        <p>The game says "Fixed #3" and leaves a marker where you made the mark.</p>
+      </li>
+    </ol>
+  </section>
+
+  <!-- Try it -->
+  <section class="try" id="try" aria-labelledby="try-title">
+    <div class="wrap">
+      <p class="kicker">Try it</p>
+      <h2 id="try-title">One mark, one fix.</h2>
+      <p class="deck narrow">Guided runs on a toy scene, the same flow as in Godot. Pick a change, five steps each.</p>
+      <div class="scenarios" role="group" aria-label="Pick a change">
+        <button type="button" data-scenario="color" aria-selected="true"><span class="sw sw-box" aria-hidden="true"></span>Color <small>Boxy goes orange</small></button>
+        <button type="button" data-scenario="shape" aria-selected="false"><span class="sw sw-peak" aria-hidden="true"></span>Shape <small>Pointy becomes a star</small></button>
+        <button type="button" data-scenario="motion" aria-selected="false"><span class="sw sw-nut" aria-hidden="true"></span>Motion <small>Nutty learns to hop</small></button>
+      </div>
+
+      <div class="demo" data-demo>
+        <div class="demo-bar">
+          <ol class="pips">
+            <li data-pip="0">Freeze</li><li data-pip="1">Pin</li><li data-pip="2">Stamp</li><li data-pip="3">Save</li><li data-pip="4">Claude</li>
+          </ol>
+          <button class="btn small" type="button" data-restart>Restart <kbd>Esc</kbd></button>
+        </div>
+
+        <div class="demo-grid">
+          <div class="stage-wrap">
+            <div class="stage" data-stage>
+              <canvas data-canvas width="960" height="540" aria-label="Toy scene: four shapes with faces, moving in place. From left: Sunny the yellow circle, Boxy the teal square, Pointy the pink triangle, Nutty the blue hexagon." role="img"></canvas>
+              <div class="flash" data-flash></div>
+              <div class="freeze-tag" data-freeze-tag>Freeze</div>
+              <div class="stamp" data-stamp><strong>Marked #1</strong><span data-stamp-sub>Art</span></div>
+              <div class="toast" data-toast role="status">
+                <span class="toast-kicker">Fixed by Claude</span>
+                <strong data-toast-title>Fixed #1</strong>
+                <span data-toast-body>Boxy: #2EC4B6 → #FF8A1F in look.gd</span>
+              </div>
+              <div class="coach" data-coach aria-hidden="true"></div>
+            </div>
+            <div class="deck-row" data-deck>
+              <div class="chips" role="group" aria-label="Category">
+                <button type="button" data-cat="0" disabled><kbd>1</kbd> Bug</button>
+                <button type="button" data-cat="1" disabled><kbd>2</kbd> Feel</button>
+                <button type="button" data-cat="2" disabled><kbd>3</kbd> Art</button>
+                <button type="button" data-cat="3" disabled><kbd>4</kbd> Balance</button>
+                <button type="button" data-cat="4" disabled><kbd>5</kbd> Idea</button>
+              </div>
+              <div class="note" data-note aria-live="polite"><span class="placeholder">What did you notice?</span></div>
+              <button class="btn primary save" type="button" data-save disabled>Save mark <kbd>↵</kbd></button>
+            </div>
+          </div>
+
+          <aside class="side">
+            <p class="step-now" data-step-text aria-live="polite">Press <kbd>M</kbd> or Freeze to stop the frame.</p>
+            <button class="btn primary" type="button" data-freeze>Freeze <kbd>M</kbd></button>
+            <div class="term" data-term role="log" aria-live="polite" aria-label="Claude Code">
+              <div class="term-head"><span>Claude Code</span><span>~/shapes</span></div>
+              <div class="term-body" data-term-body></div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Watch it -->
+  <section class="watch wrap" id="watch" aria-labelledby="watch-title">
+    <p class="kicker">With sound</p>
+    <h2 id="watch-title">Watch it</h2>
+    <p class="deck narrow">Two short videos, recorded in the game. The second is the Thornback from Wandcraft, below.</p>
+    <div class="watch-grid">
+      <figure class="frame watch-video">
+        <video controls playsinline preload="none" width="1920" height="1080" poster="/media/watch-color-poster.jpg" aria-describedby="watch-1-desc">
+          <source src="/media/watch-color.mp4" type="video/mp4">
+        </video>
+        <p class="sr-only" id="watch-1-desc">Video: Boxy is pinned in the Playmark overlay with the note "Boxy should be orange", then Claude changes one line and Boxy turns orange</p>
+        <i class="crop tl"></i><i class="crop tr"></i><i class="crop bl"></i><i class="crop br"></i>
+        <figcaption>A pin on Boxy, a note, one line of code. 16 s.</figcaption>
+      </figure>
+      <figure class="frame watch-video">
+        <video controls playsinline preload="none" width="1920" height="1080" poster="/media/watch-thornback-poster.jpg" aria-describedby="watch-2-desc">
+          <source src="/media/watch-thornback.mp4" type="video/mp4">
+        </video>
+        <p class="sr-only" id="watch-2-desc">Video: a box around the Thornback in a Wandcraft fight with the note asking for a charging ram, then the redrawn Thornback and a before and after</p>
+        <i class="crop tl"></i><i class="crop tr"></i><i class="crop bl"></i><i class="crop br"></i>
+        <figcaption>Redesigning the Thornback in Wandcraft: the mark, the redraw, before and after. 23 s.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- In a real game -->
+  <section class="real wrap" aria-labelledby="real-title">
+    <p class="kicker">In a real game</p>
+    <h2 id="real-title">Redesigning an enemy in Wandcraft</h2>
+    <p class="deck narrow">Wandcraft is a pixel-art roguelite. Its Thornback, an enemy that charges at you, looked like a loaf of bread. One mark, mid-fight:</p>
+    <blockquote class="prompt">Redesign the Thornback: make it look like a charging ram, with curled horns, thorns along its back and a glowing eye.</blockquote>
+    <div class="real-grid">
+      <figure class="frame">
+        <img src="/media/thornback-mark.jpg" width="1280" height="837" loading="lazy" alt="The Playmark overlay over a Wandcraft fight: a blue box around the Thornback, the ART stamp and the note">
+        <i class="crop tl"></i><i class="crop tr"></i><i class="crop bl"></i><i class="crop br"></i>
+        <figcaption>The mark: a box around the Thornback, ART, the note.</figcaption>
+      </figure>
+      <ol class="real-steps">
+        <li><strong>The box found the node.</strong> <code>enemy.gd</code>, kind <code>ram</code>, with the run's state: room, wave, hp, the wand.</li>
+        <li><strong>Claude found the art.</strong> 16 rows of pixel data in <code>bestiary.gd</code>, drawn with the game's palette rules.</li>
+        <li><strong>The redraw.</strong> A hunched back, bramble spikes, a curled horn, a glowing eye.</li>
+        <li><strong>Back in the fight.</strong> "Fixed #1", and the marker stays where the mark was made.</li>
+      </ol>
+    </div>
+    <figure class="before-after">
+      <img src="/media/thornback-before-after.png" width="1280" height="420" loading="lazy" alt="Before: a flat brown loaf with three green leaves. After: a hunched beast with pale spikes, a curled horn, a glowing orange eye and a wool chest.">
+    </figure>
+    <figure class="frame real-video">
+      <span class="tag">Recorded in Wandcraft</span>
+      <video muted loop playsinline preload="none" poster="/media/thornback-poster.jpg" data-lazy-video aria-describedby="thornback-video-desc">
+        <source src="/media/thornback.webm" type="video/webm">
+        <source src="/media/thornback.mp4" type="video/mp4">
+      </video>
+        <p class="sr-only" id="thornback-video-desc">The fight replayed after the fix: the new Thornback charges in and a toast says Fixed #1</p>
+      <button class="video-toggle" type="button" data-lazy-toggle aria-pressed="true">Play</button>
+      <i class="crop tl"></i><i class="crop tr"></i><i class="crop bl"></i><i class="crop br"></i>
+    </figure>
+  </section>
+
+  <!-- What Claude gets -->
+  <section class="gets wrap" aria-labelledby="gets-title">
+    <p class="kicker">The mark</p>
+    <h2 id="gets-title">What Claude gets</h2>
+    <p class="deck narrow">Every mark is a folder in <code>.playmark/inbox</code>, git-ignored by default. This is the real one from the video.</p>
+    <div class="gets-grid">
+      <figure class="frame">
+        <img src="/media/annotated.jpg" width="960" height="540" loading="lazy" alt="annotated.png: the frozen frame of the four shapes with pin number 1 on the teal square">
+        <figcaption><code>annotated.png</code> the frame, pins numbered</figcaption>
+      </figure>
+      <div class="files">
+        <ul class="tree">
+          <li><code>annotated.png</code><span>the frame, pins numbered</span></li>
+          <li><code>clip_sheet.png</code><span>the last seconds, oldest first</span></li>
+          <li><code>log.txt</code><span>warnings and errors</span></li>
+          <li><code>mark.json</code><span>note, scene, the nodes and scripts under each pin, your game's state</span></li>
+        </ul>
+<pre class="json" tabindex="0" aria-label="mark.json excerpt"><code>{
+  "seq": 1,
+  "category": "art",
+  "note": "Boxy should be orange",
+  "marks": [{ "type": "pin", "x": 750, "y": 536 }],
+  "scene": { "path": "res://shapes.tscn" },
+  "under_marks": [{
+    "mark": 1,
+    "physics": [{
+      "path": "Boxy",
+      "class": "Area2D",
+      "script": "res://shape.gd"
+    }]
+  }],
+  "context": { "look": [ … ] }
+}</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="features wrap" aria-labelledby="features-title">
+    <p class="kicker">Inside</p>
+    <h2 id="features-title">What it does</h2>
+    <ul class="feature-grid">
+      <li><h3>Rewind</h3><p>Missed the moment? Step back up to five seconds and mark that frame.</p></li>
+      <li><h3>The code under your pin</h3><p>Colliders, nodes, scripts and UI controls, per pin and box.</p></li>
+      <li><h3>Ghosts</h3><p>Past marks stay in the world where you made them. Orange is open, blue is fixed.</p></li>
+      <li><h3>Errors mark themselves</h3><p>A script error becomes a bug mark, with the clip and the log.</p></li>
+      <li><h3>Warp back</h3><p>Open the game at a mark. Claude can grab a frame to check its fix.</p></li>
+      <li><h3>Your game's state</h3><p>One line adds the player, the level or the loadout to every mark.</p></li>
+      <li><h3>Sharp at any resolution</h3><p>The overlay is its own window, so pixel-art games read fine.</p></li>
+      <li><h3>Dev builds only</h3><p>Nothing runs in a release export unless you turn it on.</p></li>
+    </ul>
+  </section>
+
+  <!-- Install -->
+  <section class="install wrap" id="install" aria-labelledby="install-title">
+    <p class="kicker">Install</p>
+    <h2 id="install-title">Three commands in Claude Code</h2>
+    <ol class="cmds">
+      <li><code data-cmd>/plugin marketplace add barmoshe/playmark</code><button type="button" class="copy" data-copy>Copy</button></li>
+      <li><code data-cmd>/plugin install playmark@playmark</code><button type="button" class="copy" data-copy>Copy</button></li>
+      <li><code data-cmd>/playmark:install</code><span class="where">in your game's repo</span><button type="button" class="copy" data-copy>Copy</button></li>
+    </ol>
+    <p class="meta reqs"><span>Godot 4.5+</span><span>Claude Code</span><span>Node 18+</span><span>Desktop, tested on macOS</span></p>
+    <p class="small-print">Without Claude Code, copy <code>addons/playmark</code> into your project and enable it in Project Settings, Plugins. Updates: <code>claude plugin update playmark</code>.</p>
+  </section>
+
+  <!-- Start a new game -->
+  <section class="newgame wrap" id="new" aria-labelledby="new-title">
+    <p class="kicker">From nothing</p>
+    <h2 id="new-title">Start a new game with it</h2>
+    <p class="deck narrow">A blank Godot project with Playmark already in it: one playable scene, a <code>CLAUDE.md</code> that teaches the loop, and a first commit. Say what game to build, play each step, mark what's off.</p>
+    <ol class="cmds">
+      <li><code data-cmd>/playmark:new star-dodger --name "Star Dodger"</code><button type="button" class="copy" data-copy>Copy</button></li>
+    </ol>
+    <ol class="loop-steps">
+      <li><strong>Build a step.</strong> One mechanic, one enemy, one screen.</li>
+      <li><strong>Play it.</strong> <kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>M</kbd> on whatever is off.</li>
+      <li><strong>Triage.</strong> <code>/playmark:triage</code> fixes what you pick.</li>
+      <li><strong>Commit.</strong> Then the next step.</li>
+    </ol>
+    <figure class="frame newgame-video">
+      <span class="tag">Built from a blank project</span>
+      <video controls playsinline preload="none" width="1920" height="1080" poster="/media/star-dodger-poster.jpg" aria-describedby="star-dodger-desc">
+        <source src="/media/star-dodger.mp4" type="video/mp4">
+      </video>
+      <p class="sr-only" id="star-dodger-desc">Video: a blank Godot project, the first playable Star Dodger, then four marks (red meteors, a gliding ship, meteors that speed up with the score, shake and sparks on a hit), each followed by its fix</p>
+      <i class="crop tl"></i><i class="crop tr"></i><i class="crop bl"></i><i class="crop br"></i>
+      <figcaption>Star Dodger, built this way: a blank project, step 1, then four marks while playing, each fixed in one line of <code>tune.gd</code>. 55 s. The game: <a href="https://github.com/barmoshe/star-dodger">github.com/barmoshe/star-dodger</a>.</figcaption>
+    </figure>
+  </section>
+
+  <!-- Why -->
+  <section class="why wrap" aria-labelledby="why-title">
+    <h2 id="why-title" class="kicker">Why</h2>
+    <blockquote>
+      <p>I made Playmark while building Wandcraft, a roguelite where you program your wand. Playtesting my own game, I kept noticing small things I didn't want to stop and write up. Now I press a key, point, and keep playing.</p>
+      <footer><img src="/media/b-mark.svg" width="22" height="22" alt=""> Bar Moshe</footer>
+    </blockquote>
+  </section>
+</main>
+
+<footer class="site-footer wrap">
+  <div class="double-rule" aria-hidden="true"></div>
+  <p class="meta">
+    <span>MIT</span>
+    <a href="https://github.com/barmoshe/playmark">GitHub</a>
+    <a href="https://github.com/barmoshe/playmark/blob/main/CHANGELOG.md">Changelog</a>
+    <span>Made by Bar Moshe at <a href="https://bar-builds.com">bar-builds.com</a></span>
+  </p>
+</footer>
+
+<script src="/site.js" defer></script>
+<script src="/demo.js" defer></script>
+</body>
+</html>

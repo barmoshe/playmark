@@ -4,10 +4,11 @@
 
 # Playmark
 
-**Mark what you see while playing your Godot game. Claude Code fixes it.**
+**Mark what you see while playing your Godot or Unity game. Claude Code fixes it.**
 
 [![ci](https://github.com/barmoshe/playmark/actions/workflows/ci.yml/badge.svg)](https://github.com/barmoshe/playmark/actions/workflows/ci.yml)
 ![Godot 4.5+](https://img.shields.io/badge/Godot-4.5%2B-478cbf)
+![Unity 6+](https://img.shields.io/badge/Unity-6%2B-222222)
 ![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-f2621b)
 [![MIT](https://img.shields.io/badge/license-MIT-lightgrey)](LICENSE)
 
@@ -22,7 +23,7 @@
 <br>
 
 Playtesting your own game, you notice small things you'd rather not stop and write up.
-Playmark is a Godot addon plus a Claude Code plugin for exactly that moment. Press
+Playmark is a Godot addon and a Unity package, plus a Claude Code plugin, for exactly that moment. Press
 <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>M</kbd>: the game freezes, you pin what you mean and write one
 line. Claude Code gets the frame, the last five seconds, the log and the code under your pin,
 and fixes it. Back in the game, a toast says "Fixed" and a marker stays where you left the note.
@@ -51,7 +52,7 @@ flowchart LR
 
 <table>
 <tr>
-<td width="25%" valign="top"><b>1. Play</b><br>Run your game from Godot. Playmark keeps the last five seconds.</td>
+<td width="25%" valign="top"><b>1. Play</b><br>Run your game from Godot or Unity. Playmark keeps the last five seconds.</td>
 <td width="25%" valign="top"><b>2. Mark</b><br><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>M</kbd> freezes the frame. Click to pin, drag to box, <kbd>1</kbd>-<kbd>5</kbd> for a category, type the note.</td>
 <td width="25%" valign="top"><b>3. Claude fixes</b><br>Your next prompt mentions the mark. <code>/playmark:triage</code> finds the code under the pin and proposes a fix. You pick.</td>
 <td width="25%" valign="top"><b>4. Retest</b><br>The game shows "Fixed #N" with what changed. The marker stays where you made it.</td>
@@ -107,7 +108,7 @@ Each was one line in the toy scene's `look.gd`. The toy is in [`demo/`](demo).
 
 ## Quick start
 
-Needs Godot 4.5+, Claude Code and Node 18+. In Claude Code:
+Needs Godot 4.5+ or Unity 6+, Claude Code and Node 18+. In Claude Code:
 
 ```
 /plugin marketplace add barmoshe/playmark
@@ -120,8 +121,12 @@ Then, from your game's repo:
 /playmark:install
 ```
 
-That copies `addons/playmark` into the project, enables it and git-ignores `.playmark/`.
-Run the game from Godot and press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>M</kbd>. Update later with
+In a Godot project that copies `addons/playmark` into it, enables it and git-ignores `.playmark/`.
+Run the game from Godot and press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>M</kbd>.
+
+In a Unity 6 project it embeds the package in `Packages/com.bar-builds.playmark`: press Play,
+then <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>M</kbd>. The Unity side has its own page:
+[unity/README.md](unity/README.md). It is new, and not yet checked in a running Editor. Update later with
 `claude plugin update playmark`.
 
 ### Codex
@@ -134,20 +139,23 @@ codex plugin marketplace add barmoshe/playmark
 codex plugin add playmark@playmark
 ```
 
-Start a new Codex session in your game repository. Ask: **Use the playmark skill
-to install Playmark in this Godot project.** Then run the game, press
-**Ctrl+Shift+M**, add a pin and note, and save the mark. Ask: **Use playmark to
-triage my marks.** Codex reads the annotated frame, recent frames, logs and scene
-context before it changes code.
+Start a new Codex session in your game repository.
+Tell Codex: **Use the playmark skill to install Playmark in this Godot project.**
+Run the game. Push **Ctrl+Shift+M**. Add a pin.
 
-Codex support covers installation and feedback triage in an existing game.
-The `/playmark:new` command and automatic new-mark notices remain Claude Code
-features. Codex reads the inbox on request and installs no lifecycle hooks.
-Use one agent per mark when both clients work in the same project.
+Add a note. Save the mark.
+Tell Codex: **Use playmark to triage my marks.**
+Codex reads the annotated frame, recent frames, `log.txt` and scene context before it changes code.
+
+Use Codex for installation and feedback triage in a Godot game.
+The `/playmark:new` command and automatic new-mark notices are Claude Code functions.
+Codex reads the inbox when you tell it to. It installs no lifecycle hooks.
+Use one agent for each mark when the two clients use the same project.
 
 To test a local checkout, replace `barmoshe/playmark` in the marketplace command
-with its absolute path. Keep the whole package; the skill needs the sibling
-`scripts/` and `addons/` directories. Restart the Codex session after installation.
+with its absolute path. Keep the complete package.
+The `scripts/` and `addons/` directories adjacent to the skill are necessary.
+Start a new Codex session after installation.
 
 ### Or start a new game with it
 
@@ -155,7 +163,7 @@ with its absolute path. Keep the whole package; the skill needs the sibling
 /playmark:new star-dodger --name "Star Dodger"
 ```
 
-A blank Godot project with Playmark already wired in: one playable scene (a square you move in
+A blank Godot project (Godot only, for now) with Playmark already wired in: one playable scene (a square you move in
 an empty room), a `CLAUDE.md` that teaches the build, playtest, mark, fix loop, and a first
 commit. Say what game to build, play each step, mark what's off.
 
@@ -183,7 +191,7 @@ Marks still land in `.playmark/inbox/`, readable by any tool or person.
 | `clip_sheet.png` | up to 12 frames from the last seconds, oldest first |
 | `clip/` | every clip frame (`inbox.mjs video <id>` makes an mp4) |
 | `screenshot.png` | the clean frame |
-| `log.txt` | the last lines Godot printed, warnings and errors included |
+| `log.txt` | the last lines the game logged (Godot output or the Unity Console), warnings and errors included |
 | `mark.json` | note, category, marks, scene, the nodes under each mark, your context, warp data |
 
 <details>
@@ -277,12 +285,18 @@ Desktop. Tested on macOS with Godot 4.6 and 4.7; CI checks 4.5 and 4.7 on Linux.
 should work and is untested so far. iOS, Android and the web export print "coming soon" and
 stay off for now.
 
+Unity: 6 (6000.0) and newer, desktop, in Play Mode and Development Builds. Compiled against
+6000.0 in CI; see [unity/README.md](unity/README.md#what-to-check-first) for what still needs a
+run in a real Editor.
+
 ## Development
 
 ```bash
 node --test tests/*.test.mjs                                  # the Claude Code side
 godot --headless --path demo --script "$PWD/tests/unit.gd"    # the addon, no window
 tests/run_selftest.sh                                         # the whole loop, in a window
+dotnet test unity/core-tests/Tests                            # the Unity package's engine-free core
+node unity/check/compile.mjs                                  # the Unity package against Unity's DLLs
 ```
 
 `demo/` holds the toy scene (four shapes, one table of looks) and the arena the selftest uses.
@@ -294,3 +308,7 @@ Hebrew, rendered by `film/cut`) and the finished videos.
 
 MIT, by Bar Moshe. Heebo and Cascadia Mono, bundled in `addons/playmark/fonts/`, are under
 the SIL Open Font License (`OFL.txt` there).
+
+## Website
+
+The site (EN + `/he`) lives in [`site/`](site/): plain HTML, no build step. Vercel serves it with the project's root directory set to `site`; `.github/workflows/site.yml` checks it on every change.

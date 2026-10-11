@@ -16,7 +16,7 @@ static func collect(host: Node, shot_size: Vector2i, marks: Array, mouse: Vector
 			"name": ProjectSettings.get_setting("application/config/name", ""),
 			"version": ProjectSettings.get_setting("application/config/version", ""),
 		},
-		"engine": Engine.get_version_info().string,
+		"engine": {"name": "godot", "version": Engine.get_version_info().string},
 		"os": OS.get_name(),
 		"debug_build": OS.is_debug_build(),
 		"scene": {
