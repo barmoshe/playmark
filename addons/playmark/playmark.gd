@@ -309,6 +309,7 @@ func _save(image: Image, frames: Array, offsets: Array, marks: Array, note: Stri
 
 	var data := {
 		"playmark": VERSION,
+		"schema": 2,
 		"id": id,
 		"seq": seq,
 		"created_at": Time.get_datetime_string_from_datetime_dict(t, false),

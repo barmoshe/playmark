@@ -1,0 +1,14 @@
+{
+    "name": "BarBuilds.Playmark.Core",
+    "rootNamespace": "BarBuilds.Playmark.Core",
+    "references": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": true
+}

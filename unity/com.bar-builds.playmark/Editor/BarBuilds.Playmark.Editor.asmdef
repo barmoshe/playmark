@@ -1,0 +1,19 @@
+{
+    "name": "BarBuilds.Playmark.Editor",
+    "rootNamespace": "BarBuilds.Playmark.EditorTools",
+    "references": [
+        "BarBuilds.Playmark",
+        "BarBuilds.Playmark.Core"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

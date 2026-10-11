@@ -7,10 +7,13 @@
 //   inbox.mjs reopen <id>               move back to inbox/
 //   inbox.mjs video <id>                clip/ -> clip.mp4 (needs ffmpeg)
 //   inbox.mjs warp <id> [--shot out.png] open the game at the mark; with --shot, save a frame and quit
+//   inbox.mjs smoke [--out dir]         an unattended run: play, mark, save, stop (checks an install)
+// Unity: warp and smoke ask the open Editor through .playmark/requests/ (Playmark's Editor
+// script enters Play Mode for them). $PLAYMARK_UNITY_PLAYER runs a Development Build instead.
 // <id> is the mark's number (14 or #14), its full id, or the id's last 4 characters.
 import fs from "node:fs";
 import path from "node:path";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import { findRoots, listMarks, findMark, oneLine } from "./lib.mjs";
 
 const [cmd = "list", ...rest] = process.argv.slice(2);
@@ -37,6 +40,47 @@ function summary(m) {
   return `#${String(m.seq ?? "?").padEnd(3)} ${m.id}  ${(m.status === "working" ? "[working] " : "")}${(m.category || "-").padEnd(7)} ${oneLine(m.note || "(no note)", 60)}  [${marks}]  ${m.scene?.path ?? ""}`;
 }
 
+// Godot marks before schema 2 carry the engine as a bare version string.
+function engineLabel(m) {
+  if (m.engine && typeof m.engine === "object") return `${m.engine.name === "unity" ? "Unity" : "Godot"} ${m.engine.version ?? ""}`.trim();
+  return `Godot ${m.engine ?? ""}`.trim();
+}
+
+const isUnity = (project) => fs.existsSync(path.join(project, "ProjectSettings", "ProjectVersion.txt"));
+const sleep = (ms) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+
+// Asks the Unity Editor for a run (warp or smoke) by dropping a request file; Playmark's Editor
+// script picks it up, enters Play Mode, and the game writes <id>.result.json when done.
+function unityRequest(root, request, wait) {
+  const project = path.dirname(root);
+  const id = process.env.PLAYMARK_REQUEST_ID || `${request.action}-${Date.now().toString(36)}`;
+  const dir = path.join(root, "requests");
+  fs.mkdirSync(dir, { recursive: true });
+  const resultFile = path.join(dir, `${id}.result.json`);
+  if (!process.env.PLAYMARK_REQUEST_ID) fs.rmSync(resultFile, { force: true });
+  fs.writeFileSync(path.join(dir, `${id}.json`), JSON.stringify({ id, ...request }, null, 2) + "\n");
+  if (!fs.existsSync(path.join(project, "Temp", "UnityLockfile"))) {
+    const unity = process.env.PLAYMARK_UNITY;
+    if (unity) {
+      spawn(unity, ["-projectPath", project], { detached: true, stdio: "ignore" }).unref();
+      console.log(`Starting Unity on ${project}; it runs the request once the project is open.`);
+    } else {
+      console.log(`Unity doesn't look open on ${project}. Open it there: the request waits in ${dir}. (Set $PLAYMARK_UNITY to the Unity binary to start it from here.)`);
+    }
+  }
+  if (!wait) {
+    console.log(`Asked Unity for ${request.action} (${id}). It enters Play Mode once any playtest in progress ends.`);
+    return;
+  }
+  const timeout = Number(process.env.PLAYMARK_WAIT_S || 300) * 1000;
+  const until = Date.now() + timeout;
+  while (!fs.existsSync(resultFile) && Date.now() < until) sleep(500);
+  if (!fs.existsSync(resultFile)) die(`No answer from Unity after ${timeout / 1000} s. Is the project open, with no playtest running? The request is ${path.join(dir, id + ".json")}.`);
+  const result = JSON.parse(fs.readFileSync(resultFile, "utf8"));
+  if (!result.ok) die(`Unity: ${result.error ?? "the run failed"}`);
+  return result;
+}
+
 switch (cmd) {
   case "list": {
     if (!roots.length) {
@@ -57,7 +101,7 @@ switch (cmd) {
     const f = (name) => path.join(m.folder, name);
     console.log(`# Mark #${m.seq} ${m.id} (${m.status}${m.source === "auto-error" ? ", auto-captured on an error" : ""})`);
     console.log(`category: ${m.category || "-"}\nnote: ${m.note || "(none)"}`);
-    console.log(`game: ${m.project?.name} ${m.project?.version} · Godot ${m.engine} · ${m.os}`);
+    console.log(`game: ${m.project?.name} ${m.project?.version} · ${engineLabel(m)} · ${m.os}${m.render_pipeline ? " · " + m.render_pipeline : ""}`);
     console.log(`scene: ${m.scene?.path}   at ${m.uptime_s}s, ${m.fps} fps, time_scale ${m.time_scale}`);
     console.log(`\nRead these images:\n  ${f("annotated.png")}   (marks numbered on the frame)`);
     if (m.clip?.frames) console.log(`  ${f("clip_sheet.png")}   (last ${m.clip.frames} frames, oldest first, left to right)`);
@@ -70,7 +114,8 @@ switch (cmd) {
       const seen = new Set();
       const nodes = [...(under.physics ?? []), ...(under.nodes ?? []), ...(under.ui ?? [])].filter((n) => !seen.has(n.path) && seen.add(n.path));
       for (const n of nodes.slice(0, 8)) {
-        console.log(`     ${n.path} (${n.class}${n.script ? ", " + n.script : ""})`);
+        const extra = [n.script, n.prefab && "prefab " + n.prefab, n.element && "element " + n.element].filter(Boolean).join(", ");
+        console.log(`     ${n.path} (${n.class}${extra ? ", " + extra : ""})`);
       }
     }
     if (m.context && Object.keys(m.context).length) console.log(`\nGame context:\n${JSON.stringify(m.context, null, 2)}`);
@@ -95,6 +140,25 @@ switch (cmd) {
   case "warp": {
     const { root, mark: m } = need(rest[0]);
     const project = path.dirname(root);
+    const shotPath = flag("--shot");
+    if (isUnity(project) && !process.env.PLAYMARK_UNITY_PLAYER) {
+      const result = unityRequest(root, { action: "warp", mark: m.id, ...(shotPath ? { shot: path.resolve(shotPath) } : {}) }, Boolean(shotPath));
+      if (result) console.log(result.shot ?? path.resolve(shotPath));
+      break;
+    }
+    if (isUnity(project)) {
+      // A Development Build: the same flags, read from its command line.
+      const player = process.env.PLAYMARK_UNITY_PLAYER;
+      const args = [`-playmark-warp=${m.id}`, ...(shotPath ? [`-playmark-shot=${path.resolve(shotPath)}`] : [])];
+      if (shotPath) {
+        execFileSync(player, args, { stdio: "inherit", timeout: 120000 });
+        console.log(path.resolve(shotPath));
+      } else {
+        spawn(player, args, { detached: true, stdio: "ignore" }).unref();
+        console.log(`Opening the build at #${m.seq} (${player} ${args.join(" ")})`);
+      }
+      break;
+    }
     const godot = process.env.PLAYMARK_GODOT || "godot";
     const shot = flag("--shot");
     // The game's warp data may carry its own launch args (seed, level...): they go first.
@@ -105,7 +169,6 @@ switch (cmd) {
       execFileSync(godot, args, { stdio: "inherit", timeout: 120000 });
       console.log(path.resolve(shot));
     } else {
-      const { spawn } = await import("node:child_process");
       spawn(godot, args, { detached: true, stdio: "ignore" }).unref();
       console.log(`Opening the game at #${m.seq} (${godot} ${args.join(" ")})`);
     }
@@ -149,6 +212,19 @@ switch (cmd) {
     }
     break;
   }
+  case "smoke": {
+    const root = roots[0];
+    if (!root) die("No .playmark folder here. Run /playmark:install first, then play once.");
+    const project = path.dirname(root);
+    const out = path.resolve(flag("--out") ?? path.join(root, "smoke"));
+    if (isUnity(project)) {
+      unityRequest(root, { action: "smoke", out }, true);
+    } else {
+      execFileSync(process.env.PLAYMARK_GODOT || "godot", ["--path", project, "--", `--playmark-smoke=${out}`], { stdio: "inherit", timeout: 120000 });
+    }
+    console.log(`Smoke run OK. Look at ${path.join(out, "smoke-overlay.png")} and ${path.join(out, "smoke-game.png")}.`);
+    break;
+  }
   default:
-    die("Commands: list [--all] | show <id> | claim <id> | resolve <id> [--note text] | reopen <id> | video <id> | warp <id> [--shot png]");
+    die("Commands: list [--all] | show <id> | claim <id> | resolve <id> [--note text] | reopen <id> | video <id> | warp <id> [--shot png] | smoke [--out dir]");
 }

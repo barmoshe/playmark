@@ -45,3 +45,41 @@ jobs:
           ! grep -E "SCRIPT ERROR|Parse Error" import.log
       - name: Unit tests
         run: ./godot --headless --path demo --script "$PWD/tests/unit.gd"
+
+  unity:
+    name: Unity package
+    runs-on: ubuntu-latest
+    env:
+      # The oldest Unity Playmark supports: compiling against it keeps newer APIs out.
+      UNITY_VERSION: 6000.0.84f1
+      UNITY_CHANGESET: 78ab6fc243d5
+      INPUTSYSTEM_VERSION: 1.20.1
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Every package file has its .meta
+        run: node scripts/unity-metas.mjs check
+      - name: Core tests (plain C#, no Unity)
+        run: dotnet test unity/core-tests/Tests
+      - name: Unity's assemblies (cached)
+        id: unity-ref
+        uses: actions/cache@v4
+        with:
+          path: ~/unity-ref
+          key: unity-ref-${{ env.UNITY_VERSION }}-inputsystem-${{ env.INPUTSYSTEM_VERSION }}
+      - name: Download them (the managed DLLs only; no license, no install)
+        if: steps.unity-ref.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ~/unity-ref/editor ~/unity-ref/inputsystem
+          curl -sSL "https://download.unity3d.com/download_unity/${UNITY_CHANGESET}/LinuxEditorInstaller/Unity-${UNITY_VERSION}.tar.xz" \
+            | xz -dc | tar x -C ~/unity-ref/editor --wildcards 'Editor/Data/Managed/*' \
+              'Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.ugui/*' 'Editor/Data/NetStandard/*'
+          curl -sSL "https://download.packages.unity.com/com.unity.inputsystem/-/com.unity.inputsystem-${INPUTSYSTEM_VERSION}.tgz" \
+            | tar xz -C ~/unity-ref/inputsystem
+      - name: Compiles against Unity (with and without the optional modules, the Editor, the sample)
+        run: node unity/check/compile.mjs --unity ~/unity-ref/editor/Editor/Data --inputsystem ~/unity-ref/inputsystem/package
