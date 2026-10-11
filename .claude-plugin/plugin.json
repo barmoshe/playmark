@@ -7,8 +7,10 @@
     "name": "Bar Moshe"
   },
   "license": "MIT",
-  "homepage": "https://github.com/barmoshe/playmark",
+  "homepage": "https://playmark.bar-builds.com",
   "repository": "https://github.com/barmoshe/playmark",
+  "documentationUrl": "https://github.com/barmoshe/playmark#readme",
+  "supportUrl": "https://github.com/barmoshe/playmark/issues",
   "keywords": [
     "godot",
     "unity",
