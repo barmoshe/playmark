@@ -2,8 +2,8 @@
 // Starts a blank Godot game with Playmark wired in from the first run.
 //   new.mjs <folder> [--name "My Game"]
 // Creates a Godot 4.5+ project with one playable scene (a square you move with WASD or the
-// arrows, in an empty room), installs the addon, writes a CLAUDE.md that teaches the
-// build -> playtest -> mark -> fix loop, and makes the first git commit.
+// arrows, in an empty room), installs the addon, writes an AGENTS.md that teaches the
+// build -> playtest -> mark -> fix loop (CLAUDE.md imports it), and makes the first git commit.
 import fs from "node:fs";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
@@ -114,7 +114,7 @@ write(".gitignore", `.godot/
 /export/
 `);
 
-write("CLAUDE.md", `# ${name}
+write("AGENTS.md", `# ${name}
 
 A Godot 4.5+ game, started blank with Playmark (https://github.com/barmoshe/playmark).
 
@@ -124,7 +124,7 @@ A Godot 4.5+ game, started blank with Playmark (https://github.com/barmoshe/play
 2. Ask the player to playtest: run the game from Godot (or \`godot --path .\`).
 3. While playing they press **Ctrl+Shift+M**, pin or box what they mean and write a note.
    Marks land in \`.playmark/inbox/\`, and the next prompt mentions them.
-4. Run \`/playmark:triage\`: read each mark's \`annotated.png\` and \`clip_sheet.png\`, find the code
+4. Triage (Claude Code: \`/playmark:triage\`; Codex: "use playmark to triage my marks"): read each mark's \`annotated.png\` and \`clip_sheet.png\`, find the code
    from the nodes under each pin, propose fixes, apply the ones the player picks, then
    \`inbox.mjs resolve <id> --note "..."\`. The running game shows "Fixed #N".
 5. Repeat. Commit after each step that works.
@@ -137,10 +137,13 @@ A Godot 4.5+ game, started blank with Playmark (https://github.com/barmoshe/play
 - \`.playmark/\` stays out of git.
 `);
 
+// Claude Code reads CLAUDE.md, Codex and most other agents read AGENTS.md: one text for both.
+write("CLAUDE.md", "@AGENTS.md\n");
+
 write("README.md", `# ${name}
 
 A Godot game in progress, built with [Playmark](https://github.com/barmoshe/playmark): play it,
-press Ctrl+Shift+M on anything that's off, and Claude Code picks it up.
+press Ctrl+Shift+M on anything that's off, and Claude Code or Codex picks it up.
 
 \`\`\`bash
 godot --path .

@@ -1,6 +1,6 @@
 # The mark format (schema 2)
 
-Playmark's engine side (the Godot addon, the Unity package) and its Claude Code side (`scripts/`,
+Playmark's engine side (the Godot addon, the Unity package) and its agent side (`scripts/`,
 `hooks/`, the skill) only meet in this folder. Anything that writes it this way works with
 `/playmark:triage`, `inbox.mjs` and the in-game toasts.
 
@@ -34,7 +34,7 @@ Playmark's engine side (the Godot addon, the Unity package) and its Claude Code 
 | `schema` | 2 | absent in older Godot marks |
 | `id`, `seq` | string, int | `seq` is the number the player sees (#14) |
 | `created_at` | string | local `YYYY-MM-DDTHH:MM:SS` |
-| `status` | `new` \| `working` \| `fixed` | the game turns changes into toasts; only Claude's side writes `working` and `fixed` |
+| `status` | `new` \| `working` \| `fixed` | the game turns changes into toasts; only the agent side (`inbox.mjs`) writes `working` and `fixed` |
 | `source` | `player` \| `auto-error` | |
 | `category` | `bug` \| `feel` \| `art` \| `balance` \| `idea` \| `""` | |
 | `note` | string | the player's words |

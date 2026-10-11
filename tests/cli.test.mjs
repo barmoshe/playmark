@@ -70,3 +70,21 @@ test("inbox list, show, resolve, reopen", () => {
   run("scripts/inbox.mjs", ["reopen", "aaaa"], dir);
   assert.match(run("scripts/inbox.mjs", ["list"], dir), /1 new, 0 fixed/);
 });
+
+test("export writes one self-contained page, fixed marks with --all", () => {
+  const { dir, game } = fixture();
+  addMark(game, "20261010-120000-aaaa", "the <boss> bar overlaps the hp");
+  addMark(game, "20261010-120100-bbbb", "too floaty");
+  fs.writeFileSync(path.join(game, ".playmark", "inbox", "20261010-120000-aaaa", "annotated.png"), Buffer.from("89504e470d0a1a0a", "hex"));
+  run("scripts/inbox.mjs", ["resolve", "bbbb", "--note", "lower gravity"], game);
+  const out = path.join(dir, "marks.html");
+  assert.match(run("scripts/inbox.mjs", ["export", "--out", out], game), /1 mark →/);
+  let html = fs.readFileSync(out, "utf8");
+  assert.match(html, /the &lt;boss&gt; bar overlaps the hp/, "notes are escaped");
+  assert.match(html, /data:image\/png;base64,/, "images are embedded");
+  assert.doesNotMatch(html, /too floaty/);
+  run("scripts/inbox.mjs", ["export", "--all", "--out", out], game);
+  html = fs.readFileSync(out, "utf8");
+  assert.match(html, /too floaty/);
+  assert.match(html, /Fixed: lower gravity/);
+});

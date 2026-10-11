@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- **Codex.** The plugin installs in Codex (`codex plugin marketplace add barmoshe/playmark`, then `codex plugin add playmark@playmark`), with the same skill and helpers as Claude Code: install, triage, resolve, start a new game. Thanks to SJ for the first version (#1). Tested end to end with `codex exec` on a Godot game.
+- One skill for both agents: install, triage and new-game flows live in `skills/playmark/SKILL.md`; the Claude Code commands point to it.
+- `inbox.mjs export [--all]`: one HTML page with every mark (frame, note, code under each pin, clip, log), images inside. Playmark without any agent: install, play, mark, export, share.
+- New games get an `AGENTS.md` (Codex and most agents read it) and a `CLAUDE.md` that imports it.
+- Godot: a game never opened in the editor no longer gets two automatic bug marks for the addon's fonts on first run. Found by Codex during testing.
+- Docs: the README, the Unity README (screenshots, a tested table) and the skill cover Godot, Unity, Claude Code, Codex and no agent.
+
 ## 0.4.0
 
 - **Unity.** A Unity 6 package (`unity/com.bar-builds.playmark`) that writes the same marks as the Godot addon: freeze and mark with an IMGUI overlay, a 5 s rewind kept on the GPU, the colliders, renderers, uGUI and UI Toolkit elements under each mark with their script assets and prefabs, ghosts in 2D and 3D, toasts when Claude claims or fixes a mark, errors as automatic bug marks, warp and smoke runs through the open Editor, Project Settings, and a Toy sample. `/playmark:install` detects a Unity project and embeds the package (`--git` pins a git URL instead). In Unity, ghosts toggle with Ctrl+Shift+J (Ctrl/Cmd+Shift+G is Unity's Create Empty Parent). Beta: checked in Unity 6000.3 LTS on a Mac (Built-in, URP, both input systems); known issues are on GitHub. See `unity/README.md`.

@@ -1,0 +1,27 @@
+{
+  "name": "playmark",
+  "version": "0.4.0",
+  "description": "Mark what you see while playing your Godot or Unity game, write a note, and hand it to Claude Code or Codex: the frame, the last seconds of play, the log and the code under your pin. Fixes show up in the game.",
+  "author": {
+    "name": "Bar Moshe"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/barmoshe/playmark",
+  "repository": "https://github.com/barmoshe/playmark",
+  "keywords": [
+    "godot",
+    "unity",
+    "gamedev",
+    "playtest",
+    "feedback",
+    "screenshot",
+    "annotation",
+    "codex"
+  ],
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "extensions": {
+    "com.openai": {
+      "hooks": []
+    }
+  }
+}

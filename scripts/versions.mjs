@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const PLACES = [
+  { file: "plugin.json", re: /("version":\s*")([^"]+)(")/ },
   { file: ".claude-plugin/plugin.json", re: /("version":\s*")([^"]+)(")/ },
   { file: "addons/playmark/plugin.cfg", re: /(version=")([^"]+)(")/ },
   { file: "addons/playmark/playmark.gd", re: /(const VERSION := ")([^"]+)(")/ },
