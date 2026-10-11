@@ -1,0 +1,86 @@
+{
+ "rtl": false,
+ "segments": [
+  {
+   "type": "card",
+   "dur": 1.2,
+   "title": "Playmark",
+   "sub": "A game from a blank project"
+  },
+  {
+   "type": "clip",
+   "dir": "sd/blank/frames",
+   "from": 0,
+   "to": 36,
+   "audio": "sd/blank/full.wav",
+   "audio_offset": 4.0,
+   "kicker": "3",
+   "label": "Star Dodger",
+   "caption": "A new game from a blank project"
+  },
+  {
+   "type": "clip",
+   "dir": "sd/step1/frames",
+   "from": 0,
+   "to": 60,
+   "audio": "sd/step1/full.wav",
+   "audio_offset": 4.0,
+   "kicker": "3",
+   "label": "Star Dodger",
+   "caption": "Step 1: a ship, meteors, stars"
+  },
+  {
+   "type": "clip",
+   "dir": "sd/m1-fixed/frames",
+   "from": 20,
+   "to": 80,
+   "audio": "sd/m1-fixed/full.wav",
+   "audio_offset": 4.0,
+   "kicker": "3",
+   "label": "Star Dodger",
+   "caption": "Mark 1: meteors glow red"
+  },
+  {
+   "type": "clip",
+   "dir": "sd/m2-fixed/frames",
+   "from": 20,
+   "to": 80,
+   "audio": "sd/m2-fixed/full.wav",
+   "audio_offset": 4.0,
+   "kicker": "3",
+   "label": "Star Dodger",
+   "caption": "Mark 2: the ship glides"
+  },
+  {
+   "type": "clip",
+   "dir": "sd/m3-fixed/frames",
+   "from": 20,
+   "to": 65,
+   "audio": "sd/m3-fixed/full.wav",
+   "audio_offset": 4.0,
+   "kicker": "3",
+   "label": "Star Dodger",
+   "caption": "Mark 3: faster as the score climbs"
+  },
+  {
+   "type": "clip",
+   "dir": "sd/m4-fixed/frames",
+   "from": 10,
+   "to": 100,
+   "audio": "sd/m4-fixed/full.wav",
+   "audio_offset": 4.0,
+   "kicker": "3",
+   "label": "Star Dodger",
+   "caption": "A hit shakes the screen and throws sparks"
+  },
+  {
+   "type": "card",
+   "dur": 2.5,
+   "title": "github.com/barmoshe/playmark",
+   "size": 76,
+   "sub": "A Godot addon and a Claude Code plugin, open source",
+   "note": "playmark.bar-builds.com"
+  }
+ ],
+ "base": "../../footage"
+}

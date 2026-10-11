@@ -1,0 +1,43 @@
+{
+ "rtl": false,
+ "segments": [
+  {
+   "type": "card",
+   "dur": 1.2,
+   "title": "Playmark",
+   "sub": "Mark it while you play. Claude fixes it."
+  },
+  {
+   "type": "clip",
+   "dir": "shapes-color-mark/frames",
+   "from": 40,
+   "to": 215,
+   "audio": "shapes-color-mark/full.wav",
+   "audio_offset": 4.0,
+   "kicker": "1",
+   "label": "Demo",
+   "caption": "A pin on Boxy, a note, save",
+   "cap": "top"
+  },
+  {
+   "type": "clip",
+   "dir": "shapes-color-fixed/frames",
+   "from": 15,
+   "to": 150,
+   "audio": "shapes-color-fixed/full.wav",
+   "audio_offset": 4.0,
+   "kicker": "1",
+   "label": "Demo",
+   "caption": "One line of code, and Boxy is orange"
+  },
+  {
+   "type": "card",
+   "dur": 2.5,
+   "title": "github.com/barmoshe/playmark",
+   "size": 76,
+   "sub": "A Godot addon and a Claude Code plugin, open source",
+   "note": "playmark.bar-builds.com"
+  }
+ ],
+ "base": "../../footage"
+}
