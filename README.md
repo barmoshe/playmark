@@ -329,3 +329,7 @@ Privacy: Playmark collects nothing and makes no network calls; marks stay in you
 ## Website
 
 The site (EN + `/he`) lives in [`site/`](site/): plain HTML, no build step. Vercel serves it with the project's root directory set to `site`; `.github/workflows/site.yml` checks it on every change.
+
+---
+
+Built by [Bar Moshe](https://bar-builds.com/?src=gh-playmark)
