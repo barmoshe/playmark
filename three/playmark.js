@@ -802,7 +802,12 @@ class Host {
         try {
             let under;
             this.log.mute = true;
-            try { under = underMarks(marks, this.scene, this.camera); } finally { this.log.mute = false; }
+            // A rewound frame shows an earlier moment than the scene now: list nothing rather than the wrong objects.
+            try {
+                under = offset < 0
+                    ? marks.map((_, i) => ({ mark: i + 1, physics: [], nodes: [], ui: [], skipped: "rewound frame: the scene has moved on since" }))
+                    : underMarks(marks, this.scene, this.camera);
+            } finally { this.log.mute = false; }
             const markList = marks.map((m, i) => {
                 const d = { type: m.box ? 'box' : 'pin', x: r1(m.x * image.width), y: r1(m.y * image.height) };
                 if (m.box) { d.w = r1(m.w * image.width); d.h = r1(m.h * image.height); }
