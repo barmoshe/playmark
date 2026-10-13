@@ -18,6 +18,7 @@ import path from "node:path";
 import { execFileSync, spawn } from "node:child_process";
 import { findRoots, listMarks, findMark, oneLine } from "./lib.mjs";
 import { exportMarks } from "./export.mjs";
+import { isCocos } from "./sink.mjs";
 
 const [cmd = "list", ...rest] = process.argv.slice(2);
 const flag = (name) => {
@@ -45,12 +46,15 @@ function summary(m) {
 
 // Godot marks before schema 2 carry the engine as a bare version string.
 function engineLabel(m) {
-  if (m.engine && typeof m.engine === "object") return `${m.engine.name === "unity" ? "Unity" : "Godot"} ${m.engine.version ?? ""}`.trim();
+  const names = { unity: "Unity", cocos: "Cocos Creator", godot: "Godot" };
+  if (m.engine && typeof m.engine === "object") return `${names[m.engine.name] ?? m.engine.name ?? "Godot"} ${m.engine.version ?? ""}`.trim();
   return `Godot ${m.engine ?? ""}`.trim();
 }
 
 const isUnity = (project) => fs.existsSync(path.join(project, "ProjectSettings", "ProjectVersion.txt"));
-const isProject = (dir) => isUnity(dir) || fs.existsSync(path.join(dir, "project.godot"));
+const isProject = (dir) => isUnity(dir) || isCocos(dir) || fs.existsSync(path.join(dir, "project.godot"));
+// Cocos runs in a browser: no editor to ask for a run, no command line to warp with (yet).
+const noCocosRuns = (what) => die(`${what} isn't available for Cocos Creator yet. Open the game in the browser and look; say what you could not check.`);
 
 // Smoke checks a fresh install, before anyone has played: the game's .playmark may not exist yet.
 function projectRoot() {
@@ -118,7 +122,7 @@ switch (cmd) {
       const done = listMarks(root, "done");
       console.log(`${root}  (${inbox.length} new, ${done.length} fixed)`);
       for (const m of inbox) console.log("  " + summary(m));
-      if (rest.includes("--all")) for (const m of done) console.log("  ✓ " + summary(m));
+      if (rest.includes("--all")) for (const m of done) console.log((m.approved ? "  ✓✓ " : "  ✓ ") + summary(m));
     }
     break;
   }
@@ -127,6 +131,8 @@ switch (cmd) {
     const f = (name) => path.join(m.folder, name);
     console.log(`# Mark #${m.seq} ${m.id} (${m.status}${m.source === "auto-error" ? ", auto-captured on an error" : ""})`);
     console.log(`category: ${m.category || "-"}\nnote: ${m.note || "(none)"}`);
+    if (m.approved) console.log(`approved by the player in the game: ${m.approved.at}`);
+    for (const r of m.reopened ?? []) console.log(`reopened by the player ${r.at}: the earlier fix ("${r.resolution?.note ?? ""}") did not hold${r.note ? `; they said: ${r.note}` : ""}`);
     console.log(`game: ${m.project?.name} ${m.project?.version} · ${engineLabel(m)} · ${m.os}${m.render_pipeline ? " · " + m.render_pipeline : ""}`);
     console.log(`scene: ${m.scene?.path}   at ${m.uptime_s}s, ${m.fps} fps, time_scale ${m.time_scale}`);
     console.log(`\nRead these images:\n  ${f("annotated.png")}   (marks numbered on the frame)`);
@@ -167,6 +173,7 @@ switch (cmd) {
     const { root, mark: m } = need(rest[0]);
     const project = path.dirname(root);
     const shotPath = flag("--shot");
+    if (isCocos(project)) noCocosRuns("warp");
     if (isUnity(project) && !process.env.PLAYMARK_UNITY_PLAYER) {
       const result = unityRequest(root, { action: "warp", mark: m.id, ...(shotPath ? { shot: path.resolve(shotPath) } : {}) }, Boolean(shotPath));
       if (result) console.log(result.shot ?? path.resolve(shotPath));
@@ -246,9 +253,10 @@ switch (cmd) {
   }
   case "smoke": {
     const root = roots[0] ?? projectRoot();
-    if (!root) die("No Godot or Unity project here. Run /playmark:install first.");
+    if (!root) die("No Godot, Unity or Cocos project here. Run /playmark:install first.");
     const project = path.dirname(root);
     const out = path.resolve(flag("--out") ?? path.join(root, "smoke"));
+    if (isCocos(project)) noCocosRuns("smoke");
     if (isUnity(project)) {
       unityRequest(root, { action: "smoke", out }, true);
     } else {

@@ -8,21 +8,25 @@
 //   Packages/com.bar-builds.playmark (an embedded package: in your repo, works offline, same
 //   version as this plugin). With --git, adds it to Packages/manifest.json as a git URL pinned
 //   to this plugin's release tag instead.
-// Both: git-ignores .playmark/ (marks stay local).
+// Cocos Creator 3.8+ (package.json with "creator"): copies cocos/playmark into assets/playmark.
+//   It runs in debug builds and the browser preview; marks reach disk through scripts/sink.mjs.
+// All: git-ignores .playmark/ (marks stay local).
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { isCocos } from "./sink.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const pluginRoot = path.resolve(here, "..");
 const godotSource = path.join(pluginRoot, "addons", "playmark");
 const unitySource = path.join(pluginRoot, "unity", "com.bar-builds.playmark");
+const cocosSource = path.join(pluginRoot, "cocos", "playmark");
 const UNITY_PACKAGE = "com.bar-builds.playmark";
 const args = process.argv.slice(2);
 // Any other flag (--help included) must not fall through to installing into the current folder.
 if (args.some((a) => a.startsWith("-") && a !== "--git")) {
   const help = args.includes("--help") || args.includes("-h");
-  (help ? console.log : console.error)("Usage: install.mjs [path] [--git]\n  path: the Godot or Unity project, or a repo with it one level down (default: the current folder)\n  --git: Unity only, reference the package by git URL instead of copying it");
+  (help ? console.log : console.error)("Usage: install.mjs [path] [--git]\n  path: the Godot, Unity or Cocos Creator project, or a repo with it one level down (default: the current folder)\n  --git: Unity only, reference the package by git URL instead of copying it");
   process.exit(help ? 0 : 2);
 }
 const useGit = args.includes("--git");
@@ -34,11 +38,13 @@ const isUnity = (dir) => fs.existsSync(path.join(dir, "ProjectSettings", "Projec
 function findProject(dir) {
   if (isGodot(dir)) return { dir, engine: "godot" };
   if (isUnity(dir)) return { dir, engine: "unity" };
+  if (isCocos(dir)) return { dir, engine: "cocos" };
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
     if (!e.isDirectory() || e.name.startsWith(".") || e.name === "node_modules") continue;
     const sub = path.join(dir, e.name);
     if (isGodot(sub)) return { dir: sub, engine: "godot" };
     if (isUnity(sub)) return { dir: sub, engine: "unity" };
+    if (isCocos(sub)) return { dir: sub, engine: "cocos" };
   }
   return null;
 }
@@ -117,14 +123,35 @@ function installUnity(project) {
   console.log("Switch to Unity (it imports the package), press Play, then Ctrl+Shift+M to mark. Marks land in .playmark/inbox.");
 }
 
+// --- Cocos Creator --------------------------------------------------------------------
+
+function installCocos(project) {
+  const version = JSON.parse(fs.readFileSync(path.join(project, "package.json"), "utf8")).creator?.version ?? "";
+  const [major, minor] = version.split(".").map(Number);
+  if (major < 3 || (major === 3 && minor < 8)) {
+    console.error(`This project uses Cocos Creator ${version}. Playmark needs Cocos Creator 3.8 or newer.`);
+    process.exit(1);
+  }
+  const target = path.join(project, "assets", "playmark");
+  // Keep the .meta files Cocos wrote on a previous install: their uuids stay stable.
+  for (const f of fs.existsSync(target) ? fs.readdirSync(target) : []) if (!f.endsWith(".meta")) fs.rmSync(path.join(target, f), { recursive: true, force: true });
+  fs.cpSync(cocosSource, target, { recursive: true, dereference: true });
+  for (const f of fs.readdirSync(target)) if (f.endsWith(".meta") && !fs.existsSync(path.join(target, f.slice(0, -5)))) fs.rmSync(path.join(target, f));
+  console.log(`Playmark installed in ${project} (Cocos Creator, assets/playmark)`);
+  console.log("It runs in debug builds and the browser preview. Start the sink in the project folder:");
+  console.log(`  node ${path.join(pluginRoot, "scripts", "sink.mjs")}`);
+  console.log("then play the game on localhost and press Ctrl+Shift+M (three fingers on a phone). Marks land in .playmark/inbox.");
+}
+
 // --------------------------------------------------------------------------------------
 
 const found = findProject(start);
 if (!found) {
-  console.error(`No Godot (project.godot) or Unity (ProjectSettings/ProjectVersion.txt) project in ${start} or one level down.`);
+  console.error(`No Godot (project.godot), Unity (ProjectSettings/ProjectVersion.txt) or Cocos Creator (package.json with "creator") project in ${start} or one level down.`);
   process.exit(1);
 }
 if (found.engine === "godot") installGodot(found.dir);
+else if (found.engine === "cocos") installCocos(found.dir);
 else installUnity(found.dir);
 
 const ignore = path.join(found.dir, ".gitignore");

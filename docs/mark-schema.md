@@ -1,6 +1,6 @@
 # The mark format (schema 2)
 
-Playmark's engine side (the Godot addon, the Unity package) and its agent side (`scripts/`,
+Playmark's engine side (the Godot addon, the Unity package, the Cocos script) and its agent side (`scripts/`,
 `hooks/`, the skill) only meet in this folder. Anything that writes it this way works with
 `/playmark:triage`, `inbox.mjs` and the in-game toasts.
 
@@ -42,9 +42,9 @@ Playmark's engine side (the Godot addon, the Unity package) and its agent side (
 | `frame_offset_s` | number | 0 for the freeze frame, negative for a rewound one |
 | `scope` | string | the game's room or area, from `set_scope` / `SetScope` |
 | `project` | `{name, version}` | |
-| `engine` | `{name, version}` | `name` is `godot` or `unity`. A bare string in marks before schema 2 means Godot. |
-| `os`, `debug_build` | string, bool | Unity adds `editor`, `render_pipeline`, `graphics` |
-| `scene` | `{path, name}` | `res://...tscn` in Godot, `Assets/...unity` in Unity (`also_loaded` lists additive scenes) |
+| `engine` | `{name, version}` | `name` is `godot`, `unity` or `cocos`. A bare string in marks before schema 2 means Godot. |
+| `os`, `debug_build` | string, bool | Unity adds `editor`, `render_pipeline`, `graphics`; Cocos adds `preview`, `url`, `device_pixel_ratio` |
+| `scene` | `{path, name}` | `res://...tscn` in Godot, `Assets/...unity` in Unity (`also_loaded` lists additive scenes). Cocos knows only the scene's name at runtime: `path` is that name |
 | `window_size`, `viewport_size`, `screenshot_size` | `[w, h]` | |
 | `fps`, `time_scale`, `uptime_s`, `mouse` | | `time_scale` before the freeze |
 | `under_marks[]` | object | per mark: `mark` (its number), `physics[]`, `nodes[]`, `ui[]`, and `world` when it has a place in the world. Each entry: `path`, `class`, `script` when one is attached, `position`. Unity adds `prefab`, `components`, `script_on`, `other_scripts`, `layer`, `tag`; UI Toolkit entries add `element`, `element_class`, `uss_classes`. |
@@ -53,6 +53,9 @@ Playmark's engine side (the Godot addon, the Unity package) and its agent side (
 | `files[]`, `clip` | | `clip` is `{frames, fps, offsets_s[], dir}` |
 | `claimed_at` | string | set by `inbox.mjs claim` |
 | `resolution` | `{note, at}` | set by `inbox.mjs resolve` |
+| `approved` | `{at}` | the player approved the fix in the game (Cocos: a fixed ghost's card); its ghost is hidden |
+| `dismissed` | `true` | the player dismissed an open mark in the game (a test, not a problem); it is `fixed` and `approved` with no change made |
+| `reopened[]` | `{at, note, resolution}` | the player said a fix did not hold; the mark is back in `inbox/` as `new`, and `resolution` is the fix that did not hold |
 
 ## Requests (Unity)
 
@@ -65,3 +68,15 @@ Playmark's engine side (the Godot addon, the Unity package) and its agent side (
 
 The Editor renames it to `<id>.taken`, enters Play Mode, and the game writes
 `<id>.result.json`: `{ "id": "...", "ok": true, "shot": "..." }` or `{ "ok": false, "error": "..." }`.
+
+## Cocos
+
+A game in a browser can't write files, so the Cocos script posts each mark to `scripts/sink.mjs`
+(`POST /playmark/marks` with `{data, files, log}`, files base64), which writes the folder above with
+the same rules (`mark.json` last) and picks `id` and `seq`. The game reads statuses from
+`GET /playmark/status`. In `under_marks`, `ui` holds 2D and UI nodes (anything with a
+`UITransform` that draws, takes input or carries a game script), topmost first; `nodes` holds 3D
+`MeshRenderer`s, nearest first, with their `distance`. `physics` is empty. `path` is the node path
+from the scene root, `class` the drawing component (`cc.Sprite`, `cc.Label`, `cc.MeshRenderer`...),
+`script` the first component that isn't `cc.*` (a class name: search for it), plus `components`.
+`world` is `[x, y]` on the 2D/UI plane or `[x, y, z]` where the pin's ray hit a 3D bound.
