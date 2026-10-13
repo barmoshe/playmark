@@ -10,11 +10,13 @@
 //   to this plugin's release tag instead.
 // Cocos Creator 3.8+ (package.json with "creator"): copies cocos/playmark into assets/playmark.
 //   It runs in debug builds and the browser preview; marks reach disk through scripts/sink.mjs.
+// three.js (package.json that depends on "three"): copies three/playmark.js into src/playmark/
+//   (or playmark/ without a src/ folder). The game calls Playmark.attach; marks go through the sink.
 // All: git-ignores .playmark/ (marks stay local).
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { isCocos } from "./sink.mjs";
+import { isCocos, isThree } from "./sink.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const pluginRoot = path.resolve(here, "..");
@@ -26,7 +28,7 @@ const args = process.argv.slice(2);
 // Any other flag (--help included) must not fall through to installing into the current folder.
 if (args.some((a) => a.startsWith("-") && a !== "--git")) {
   const help = args.includes("--help") || args.includes("-h");
-  (help ? console.log : console.error)("Usage: install.mjs [path] [--git]\n  path: the Godot, Unity or Cocos Creator project, or a repo with it one level down (default: the current folder)\n  --git: Unity only, reference the package by git URL instead of copying it");
+  (help ? console.log : console.error)("Usage: install.mjs [path] [--git]\n  path: the Godot, Unity, Cocos Creator or three.js project, or a repo with it one level down (default: the current folder)\n  --git: Unity only, reference the package by git URL instead of copying it");
   process.exit(help ? 0 : 2);
 }
 const useGit = args.includes("--git");
@@ -39,12 +41,14 @@ function findProject(dir) {
   if (isGodot(dir)) return { dir, engine: "godot" };
   if (isUnity(dir)) return { dir, engine: "unity" };
   if (isCocos(dir)) return { dir, engine: "cocos" };
+  if (isThree(dir)) return { dir, engine: "three" };
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
     if (!e.isDirectory() || e.name.startsWith(".") || e.name === "node_modules") continue;
     const sub = path.join(dir, e.name);
     if (isGodot(sub)) return { dir: sub, engine: "godot" };
     if (isUnity(sub)) return { dir: sub, engine: "unity" };
     if (isCocos(sub)) return { dir: sub, engine: "cocos" };
+    if (isThree(sub)) return { dir: sub, engine: "three" };
   }
   return null;
 }
@@ -143,15 +147,29 @@ function installCocos(project) {
   console.log("then play the game on localhost and press Ctrl+Shift+M (three fingers on a phone). Marks land in .playmark/inbox.");
 }
 
+// --- three.js -------------------------------------------------------------------------
+
+function installThree(project) {
+  const rel = fs.existsSync(path.join(project, "src")) ? "src/playmark" : "playmark";
+  const target = path.join(project, rel);
+  fs.mkdirSync(target, { recursive: true });
+  fs.copyFileSync(path.join(pluginRoot, "three", "playmark.js"), path.join(target, "playmark.js"));
+  console.log(`Playmark installed in ${project} (three.js, ${rel}/playmark.js)`);
+  console.log(`Add to your game (development only, before renderer.setAnimationLoop): import { Playmark } from '<path to>/${rel}/playmark.js'; Playmark.attach({ renderer, scene, camera });`);
+  console.log(`Start the sink in the project folder: node ${path.join(pluginRoot, "scripts", "sink.mjs")}`);
+  console.log("Then play the game on localhost and press Ctrl+Shift+M. Marks land in .playmark/inbox.");
+}
+
 // --------------------------------------------------------------------------------------
 
 const found = findProject(start);
 if (!found) {
-  console.error(`No Godot (project.godot), Unity (ProjectSettings/ProjectVersion.txt) or Cocos Creator (package.json with "creator") project in ${start} or one level down.`);
+  console.error(`No Godot (project.godot), Unity (ProjectSettings/ProjectVersion.txt), Cocos Creator (package.json with "creator") or three.js (package.json depending on "three") project in ${start} or one level down.`);
   process.exit(1);
 }
 if (found.engine === "godot") installGodot(found.dir);
 else if (found.engine === "cocos") installCocos(found.dir);
+else if (found.engine === "three") installThree(found.dir);
 else installUnity(found.dir);
 
 const ignore = path.join(found.dir, ".gitignore");

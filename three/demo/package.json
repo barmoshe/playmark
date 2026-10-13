@@ -1,0 +1,8 @@
+{
+  "name": "playmark-three-demo",
+  "private": true,
+  "description": "A toy three.js scene for checking Playmark by hand. npm install, then serve the three/ folder and open demo/.",
+  "dependencies": {
+    "three": "0.170.0"
+  }
+}

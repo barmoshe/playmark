@@ -1,8 +1,9 @@
 #!/usr/bin/env node
-// The Cocos side's disk. A game in a browser can't write files, so it posts each mark here and
-// this writes the same .playmark folder the Godot addon and the Unity package write.
+// The browser side's disk (Cocos Creator, three.js). A game in a browser can't write files, so it
+// posts each mark here and this writes the same .playmark folder the Godot addon and the Unity package write.
 //   sink.mjs [path] [--port 7477]
-// path = the Cocos project (package.json with "creator"), or a repo with it one level down.
+// path = the Cocos project (package.json with "creator") or three.js project (package.json that
+// depends on "three"), or a repo with it one level down.
 // Listens on 127.0.0.1 only and answers pages served from localhost only. Stop it with Ctrl+C.
 //   GET  /playmark/status   every mark's status, for the game's toasts and ghosts
 //   POST /playmark/marks    {data, files: {"screenshot.png": base64, ...}, log} -> {id, seq}
@@ -27,10 +28,21 @@ export const isCocos = (dir) => {
   }
 };
 
-export function findCocos(dir) {
-  if (isCocos(dir)) return dir;
+export const isThree = (dir) => {
+  try {
+    const p = JSON.parse(fs.readFileSync(path.join(dir, "package.json"), "utf8"));
+    return Boolean(p.dependencies?.three || p.devDependencies?.three || p.peerDependencies?.three);
+  } catch {
+    return false;
+  }
+};
+
+const isWeb = (dir) => isCocos(dir) || isThree(dir);
+
+export function findWeb(dir) {
+  if (isWeb(dir)) return dir;
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-    if (e.isDirectory() && !e.name.startsWith(".") && e.name !== "node_modules" && isCocos(path.join(dir, e.name))) return path.join(dir, e.name);
+    if (e.isDirectory() && !e.name.startsWith(".") && e.name !== "node_modules" && isWeb(path.join(dir, e.name))) return path.join(dir, e.name);
   }
   return null;
 }
@@ -183,7 +195,7 @@ export function createSink(root) {
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const args = process.argv.slice(2);
   if (args.includes("--help") || args.includes("-h")) {
-    console.log("Usage: sink.mjs [path] [--port 7477]\n  path: the Cocos project, or a repo with it one level down (default: the current folder)");
+    console.log("Usage: sink.mjs [path] [--port 7477]\n  path: the Cocos Creator or three.js project, or a repo with it one level down (default: the current folder)");
     process.exit(0);
   }
   const portAt = args.indexOf("--port");
@@ -191,9 +203,9 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   const start = path.resolve(args.find((a, i) => !a.startsWith("--") && args[i - 1] !== "--port") ?? process.cwd());
   let root = process.env.PLAYMARK_DIR ? path.resolve(process.env.PLAYMARK_DIR) : null;
   if (!root) {
-    const project = findCocos(start);
+    const project = findWeb(start);
     if (!project) {
-      console.error(`No Cocos Creator project (package.json with "creator") in ${start} or one level down.`);
+      console.error(`No Cocos Creator (package.json with "creator") or three.js (package.json depending on "three") project in ${start} or one level down.`);
       process.exit(1);
     }
     root = path.join(project, ".playmark");

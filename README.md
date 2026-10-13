@@ -11,7 +11,7 @@
 ![Claude Code · Codex](https://img.shields.io/badge/Claude%20Code%20·%20Codex-plugin-f2621b)
 [![MIT](https://img.shields.io/badge/license-MIT-lightgrey)](LICENSE)
 
-[Watch](#watch-it-work) · [Quick start](#quick-start) · [No agent](#no-agent-mark-export-share) · [What a mark holds](#what-a-mark-contains) · [Unity](unity/README.md) · [Cocos](cocos/README.md) · [Changelog](CHANGELOG.md)
+[Watch](#watch-it-work) · [Quick start](#quick-start) · [No agent](#no-agent-mark-export-share) · [What a mark holds](#what-a-mark-contains) · [Unity](unity/README.md) · [Cocos](cocos/README.md) · [three.js](three/README.md) · [Changelog](CHANGELOG.md)
 
 <br>
 
@@ -108,7 +108,7 @@ Each was one line in the toy scene's `look.gd`. The toy is in [`demo/`](demo).
 
 ## Quick start
 
-Needs Godot 4.5+, Unity 6+ or Cocos Creator 3.8+, Node 18+, and Claude Code or Codex.
+Needs Godot 4.5+, Unity 6+, Cocos Creator 3.8+ or three.js, Node 18+, and Claude Code or Codex.
 
 <table>
 <tr><th width="50%">Claude Code</th><th width="50%">Codex</th></tr>
@@ -139,13 +139,13 @@ In a new session in your game's repo: "Install Playmark in this game", then late
 
 Then play and press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>M</kbd>:
 
-| | Godot 4.5+ | Unity 6+ (beta) | Cocos Creator 3.8+ (beta) |
-|---|---|---|---|
-| Install puts | `addons/playmark`, enabled | the package in `Packages/com.bar-builds.playmark` | `assets/playmark/playmark.ts` |
-| You play in | the game run from Godot | Play Mode | a debug web build or the browser preview, with `scripts/sink.mjs` running |
-| More | [below](#using-it-in-a-game) | [unity/README.md](unity/README.md) | [cocos/README.md](cocos/README.md) |
+| | Godot 4.5+ | Unity 6+ (beta) | Cocos Creator 3.8+ (beta) | three.js (beta) |
+|---|---|---|---|---|
+| Install puts | `addons/playmark`, enabled | the package in `Packages/com.bar-builds.playmark` | `assets/playmark/playmark.ts` | `src/playmark/playmark.js` (or `playmark/`); your game calls `Playmark.attach` |
+| You play in | the game run from Godot | Play Mode | a debug web build or the browser preview, with `scripts/sink.mjs` running | your dev server on localhost, with `scripts/sink.mjs` running |
+| More | [below](#using-it-in-a-game) | [unity/README.md](unity/README.md) | [cocos/README.md](cocos/README.md) | [three/README.md](three/README.md) |
 
-All three git-ignore `.playmark/`. `inbox.mjs smoke` checks a Godot or Unity install by itself: it plays 6 s, marks,
+All four git-ignore `.playmark/`. `inbox.mjs smoke` checks a Godot or Unity install by itself: it plays 6 s, marks,
 saves and stops. Update with `claude plugin update playmark` or `codex plugin add playmark@playmark`.
 
 ### Or start a new game with it
@@ -298,6 +298,7 @@ Project Settings, under `playmark/`:
 | **Godot** 4.5+, desktop | Tested on macOS with 4.6 and 4.7; CI checks 4.5 and 4.7 on Linux. Windows should work, untested. |
 | **Unity** 6+, desktop | Beta: checked in 6000.3 LTS on a Mac. See [unity/README.md](unity/README.md#tested). |
 | **Cocos Creator** 3.8+, web | Beta: checked with 3.8.8 web-mobile debug builds in Chrome on Windows. See [cocos/README.md](cocos/README.md#tested). |
+| **three.js**, web | Beta: checked with r170 and `WebGLRenderer` in Chromium on Windows, on a demo scene. See [three/README.md](three/README.md#tested). |
 | **Claude Code** | The plugin: skill, commands, a new-marks notice on each prompt. |
 | **Codex** | The same skill and helpers; ask for triage yourself (no notice). |
 | **No agent** | Install by hand, `inbox.mjs export` for a shareable page. |
