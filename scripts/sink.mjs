@@ -136,8 +136,18 @@ const localHost = (value) => {
   }
 };
 
+// Hostile input (a malformed URL, a bad header) must get a 400, never take the sink down.
+const safe = (handler) => (req, res) => {
+  try {
+    handler(req, res);
+  } catch {
+    if (!res.headersSent) res.writeHead(400, { "content-type": "text/plain" }).end("Bad request\n");
+    else res.destroy();
+  }
+};
+
 export function createSink(root) {
-  return http.createServer((req, res) => {
+  return http.createServer(safe((req, res) => {
     const origin = req.headers.origin;
     // A page on another site must not read or write marks, and a rebinding DNS name must not either.
     const originOk = !origin || (origin.startsWith("http://") || origin.startsWith("https://")) && localHost(origin.replace(/^https?:\/\//, ""));
@@ -189,7 +199,7 @@ export function createSink(root) {
     } else {
       send(404, { error: "not found" });
     }
-  });
+  }));
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
