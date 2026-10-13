@@ -4,6 +4,8 @@
 // It watches for the shortcut, keeps the last seconds of play, freezes the game for the overlay,
 // and sends each mark to the sink (node <plugin>/scripts/sink.mjs), which writes .playmark/
 // exactly like the Godot addon and the Unity package. Polls the sink so a fix shows as a toast.
+// On a phone: `sink.mjs --lan` serves the build to the Wi-Fi and marks the page (PLAYMARK_LAN);
+// then it starts on that address too, talks to the sink same-origin, and shows a MARK button.
 //
 //   Playmark.addContext('player', () => ({ hp }));   // game state on every mark
 //   Playmark.setScope(() => roomName);                // ghosts per room when one scene has many
@@ -56,6 +58,9 @@ export const Playmark = {
 
 const CATEGORIES = ['bug', 'feel', 'art', 'balance', 'idea'];
 const MAX_MARKS = 9;
+/** Served by `sink.mjs --lan`: the sink is this page's own origin. (Functions: a release build drops them.) */
+const isLan = () => !!(window as any).PLAYMARK_LAN;
+const isTouch = () => !!window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
 
 const BRAND = {
     ground: '#111111', ground2: '#1b1b1b', paper: '#f2efe6', ink2: '#b3b0a8',
@@ -99,6 +104,9 @@ class Overlay {
         } as Partial<CSSStyleDeclaration>);
         this.build();
         document.body.appendChild(this.root);
+        window.visualViewport?.addEventListener('resize', this.fit);
+        window.visualViewport?.addEventListener('scroll', this.fit);
+        this.fit();
         // Capture phase on window: the game's own key listeners never see a key typed here.
         window.addEventListener('keydown', this.keyHandler, true);
         window.addEventListener('keyup', this.stopKey, true);
@@ -146,6 +154,8 @@ class Overlay {
         window.removeEventListener('keydown', this.keyHandler, true);
         window.removeEventListener('keyup', this.stopKey, true);
         window.removeEventListener('resize', this.draw);
+        window.visualViewport?.removeEventListener('resize', this.fit);
+        window.visualViewport?.removeEventListener('scroll', this.fit);
         this.root.remove();
         this.onClose?.();
     }
@@ -160,9 +170,18 @@ class Overlay {
         return e;
     }
 
+    /** A phone's soft keyboard shrinks the visual viewport, not the layout one: follow it. */
+    private fit = () => {
+        const vv = window.visualViewport;
+        if (!vv) return;
+        Object.assign(this.root.style, { inset: 'auto', left: `${vv.offsetLeft}px`, top: `${vv.offsetTop}px`, width: `${vv.width}px`, height: `${vv.height}px` });
+        this.draw();
+    };
+
     private build() {
-        const head = this.el('div', this.root, { display: 'flex', alignItems: 'flex-end', gap: '18px', padding: '10px 18px 8px', borderBottom: `1px solid ${BRAND.rule}` });
-        const title = this.el('div', head, { flex: '1', minWidth: '0' });
+        const side = isTouch() ? '10px' : '18px';
+        const head = this.el('div', this.root, { display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: isTouch() ? '4px 14px' : '18px', padding: `calc(10px + env(safe-area-inset-top, 0px)) ${side} 8px`, borderBottom: `1px solid ${BRAND.rule}` });
+        const title = this.el('div', head, { flex: isTouch() ? '1 1 100%' : '1', minWidth: '0' });
         this.el('div', title, { font: `900 24px ${BRAND.sans}`, letterSpacing: '0.02em' }, 'PLAYMARK');
         const parts = [`#${this.info.seq}`, this.info.scene, `${this.info.fps} FPS`, 'GAME FROZEN'].filter(Boolean);
         this.el('div', title, { font: `11px ${BRAND.mono}`, color: BRAND.ink2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }, parts.join('  ·  '));
@@ -184,7 +203,7 @@ class Overlay {
         this.stage.addEventListener('pointerup', (e) => this.onUp(e));
         this.stage.addEventListener('contextmenu', (e) => { e.preventDefault(); this.undoMark(); });
 
-        const scrub = this.el('div', this.root, { display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 18px', font: `11px ${BRAND.mono}`, color: BRAND.ink2 });
+        const scrub = this.el('div', this.root, { display: 'flex', alignItems: 'center', gap: '8px', padding: `6px ${side}`, font: `11px ${BRAND.mono}`, color: BRAND.ink2 });
         const step = (label: string, d: number) => {
             const b = this.button(scrub, label);
             b.disabled = this.frames.length === 0;
@@ -195,13 +214,15 @@ class Overlay {
         this.scrubLabel = this.el('span', scrub, { flex: '1' }, this.frames.length ? '← → REWIND' : 'NO CLIP');
         this.scrubRight = this.el('span', scrub, {}, 'FREEZE FRAME');
 
-        const deck = this.el('div', this.root, { display: 'flex', flexWrap: 'wrap', gap: '8px', padding: '8px 18px', borderTop: `1px solid ${BRAND.rule}` });
+        const deck = this.el('div', this.root, { display: 'flex', flexWrap: 'wrap', gap: isTouch() ? '6px' : '8px', padding: `8px ${side}`, borderTop: `1px solid ${BRAND.rule}` });
         CATEGORIES.forEach((c, i) => {
-            const b = this.button(deck, `${i + 1}  ${c.toUpperCase()}`);
+            const b = this.button(deck, isTouch() ? c.toUpperCase() : `${i + 1}  ${c.toUpperCase()}`);
+            if (isTouch()) b.style.flex = '1 1 0';
             b.onclick = () => this.setCategory(i);
             this.stamps.push(b);
         });
-        this.note = this.el('textarea', deck, { flex: '1 1 260px', minHeight: '38px', maxHeight: '90px', resize: 'none', background: BRAND.ground2, color: BRAND.paper, border: `1px solid ${BRAND.rule}`, borderRadius: '4px', padding: '8px', font: `14px ${BRAND.sans}`, userSelect: 'text' });
+        // 16 px on touch: iOS zooms the page into a smaller text field when it gets focus.
+        this.note = this.el('textarea', deck, { flex: isTouch() ? '1 1 100%' : '1 1 260px', minHeight: isTouch() ? '44px' : '38px', maxHeight: '90px', resize: 'none', background: BRAND.ground2, color: BRAND.paper, border: `1px solid ${BRAND.rule}`, borderRadius: '4px', padding: '8px', font: `${isTouch() ? 16 : 14}px ${BRAND.sans}`, userSelect: 'text' });
         this.note.placeholder = 'What do you see? One line is enough.';
         const undo = this.button(deck, 'UNDO');
         undo.onclick = () => this.undoMark();
@@ -209,15 +230,15 @@ class Overlay {
         cancel.onclick = () => this.cancel();
         const save = this.button(deck, 'SAVE MARK');
         Object.assign(save.style, { background: BRAND.orange, color: BRAND.ink, borderColor: BRAND.orange, fontWeight: '900' });
+        if (isTouch()) { undo.style.flex = '1 1 0'; cancel.style.flex = '1 1 0'; save.style.flex = '2 1 0'; }
         save.onclick = () => this.submit();
 
-        const touch = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
-        this.el('div', this.root, { padding: '0 18px 8px', font: `11px ${BRAND.mono}`, color: BRAND.ink2 },
-            touch ? 'TAP TO PIN  ·  DRAG TO BOX' : 'CLICK PIN  ·  DRAG BOX  ·  RIGHT-CLICK UNDO  ·  1-5 CATEGORY  ·  ← → REWIND  ·  CTRL+ENTER SAVE  ·  ESC CANCEL');
+        this.el('div', this.root, { padding: `0 ${side} calc(8px + env(safe-area-inset-bottom, 0px))`, font: `11px ${BRAND.mono}`, color: BRAND.ink2 },
+            isTouch() ? 'TAP TO PIN  ·  DRAG TO BOX' : 'CLICK PIN  ·  DRAG BOX  ·  RIGHT-CLICK UNDO  ·  1-5 CATEGORY  ·  ← → REWIND  ·  CTRL+ENTER SAVE  ·  ESC CANCEL');
     }
 
     private button(parent: HTMLElement, label: string): HTMLButtonElement {
-        const b = this.el('button', parent, { background: 'transparent', color: BRAND.paper, border: `1px solid ${BRAND.rule}`, borderRadius: '4px', padding: '7px 10px', font: `700 12px ${BRAND.mono}`, cursor: 'pointer' }, label);
+        const b = this.el('button', parent, { background: 'transparent', color: BRAND.paper, border: `1px solid ${BRAND.rule}`, borderRadius: '4px', padding: isTouch() ? '0 8px' : '7px 10px', minHeight: isTouch() ? '44px' : '', font: `700 12px ${BRAND.mono}`, cursor: 'pointer', touchAction: 'manipulation' }, label);
         b.type = 'button';
         return b;
     }
@@ -648,6 +669,8 @@ class Host {
         window.addEventListener('pointermove', (e) => { this.mouse = { x: e.clientX, y: e.clientY }; }, true);
         // Phones have no keyboard: three fingers at once open the overlay.
         window.addEventListener('touchstart', (e) => { if (e.touches.length === 3) this.requestOpen(); }, true);
+        // On a phone over the network, a button too: some browsers keep three fingers for themselves.
+        if (isLan()) this.markButton();
         director.on(Director.EVENT_AFTER_DRAW, this.onDraw, this);
         this.loop();
     }
@@ -658,6 +681,30 @@ class Host {
         Object.assign(d.style, { position: 'fixed', zIndex: '2147483645', pointerEvents: 'none', font: `12px ${BRAND.sans}` }, style);
         document.body.appendChild(d);
         return d;
+    }
+
+    private markButton() {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.textContent = 'MARK';
+        b.setAttribute('data-playmark', 'mark-button');
+        Object.assign(b.style, {
+            position: 'fixed', zIndex: '2147483645', right: 'calc(10px + env(safe-area-inset-right, 0px))', bottom: 'calc(10px + env(safe-area-inset-bottom, 0px))',
+            minWidth: '56px', height: '44px', padding: '0 12px', border: `2px solid ${BRAND.ink}`, borderRadius: '22px', background: BRAND.orange, color: BRAND.ink,
+            font: `900 13px ${BRAND.sans}`, letterSpacing: '0.06em', opacity: '0.85', touchAction: 'manipulation', boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
+        } as Partial<CSSStyleDeclaration>);
+        // Tap: open the overlay. Hold (0.6 s): show or hide ghosts. The game must not get this touch.
+        let hold = 0, held = false;
+        b.addEventListener('pointerdown', (e) => {
+            e.preventDefault(); e.stopPropagation();
+            held = false;
+            hold = window.setTimeout(() => { held = true; this.toggleGhosts(); }, 600);
+        });
+        b.addEventListener('pointerup', () => { clearTimeout(hold); if (!held) this.requestOpen(); });
+        b.addEventListener('pointercancel', () => clearTimeout(hold));
+        b.addEventListener('contextmenu', (e) => e.preventDefault());
+        for (const t of ['pointerup', 'touchstart', 'touchend', 'mousedown', 'mouseup', 'click']) b.addEventListener(t, (e) => e.stopPropagation());
+        document.body.appendChild(b);
     }
 
     requestOpen() {
@@ -686,7 +733,7 @@ class Host {
         settings.ghostsVisible = !settings.ghostsVisible;
         if (!settings.ghostsVisible) { this.card?.remove(); this.card = null; }
         try { localStorage.setItem(GHOSTS_KEY, settings.ghostsVisible ? 'on' : 'off'); } catch { /* private mode */ }
-        this.toast('ready', settings.ghostsVisible ? 'Ghosts on' : 'Ghosts off', settings.ghostsVisible ? '' : 'They stay off on this device until you switch them on.', `${settings.ghostsShortcut.toUpperCase()} TO SWITCH`, 1.5);
+        this.toast('ready', settings.ghostsVisible ? 'Ghosts on' : 'Ghosts off', settings.ghostsVisible ? '' : 'They stay off on this device until you switch them on.', isLan() ? 'HOLD MARK TO SWITCH' : `${settings.ghostsShortcut.toUpperCase()} TO SWITCH`, 1.5);
     }
 
     // Runs right after Cocos drew a frame: the drawing buffer still holds it, so it can be copied.
@@ -751,7 +798,7 @@ class Host {
             const offset = s.frameIndex < 0 ? 0 : frames[s.frameIndex].offset;
             this.save(image, frames, s.marks, s.note, s.category, offset, 'player', mouse, time)
                 .then((saved) => { this.session++; ov.finish(true, saved.seq); })
-                .catch((e: Error) => ov.finish(false, seq, this.sinkUp ? e.message : `No sink at ${this.sinkUrl()}. Start it: node <playmark>/scripts/sink.mjs`));
+                .catch((e: Error) => ov.finish(false, seq, this.sinkUp ? e.message : `No sink at ${this.sinkUrl() || location.origin}. Start it: node <playmark>/scripts/sink.mjs`));
         };
         ov.onClose = () => {
             this.overlay = null;
@@ -851,7 +898,8 @@ class Host {
 
     private sinkUrl() {
         const q = new URLSearchParams(location.search).get('playmark_sink');
-        return (q || settings.sink).replace(/\/$/, '');
+        // Served by a LAN sink: it is this page's origin (and its cookie carries the token).
+        return (q || (isLan() ? '' : settings.sink)).replace(/\/$/, '');
     }
 
     private nextSeq() {
@@ -889,12 +937,12 @@ class Host {
             this.known.set(m.id, m);
             if (first || !prev || prev.status === m.status) continue;
             if (m.status === 'working') this.toast('working', `On #${m.seq} now`, m.note || '(no note)', 'YOUR AGENT');
-            else if (m.status === 'fixed') this.toast('fixed', `Fixed #${m.seq}`, m.resolution?.note || m.note, `RELOAD TO RETEST · ${settings.ghostsShortcut.toUpperCase()} GHOSTS`, 6);
+            else if (m.status === 'fixed') this.toast('fixed', `Fixed #${m.seq}`, m.resolution?.note || m.note, isTouch() ? 'RELOAD TO RETEST' : `RELOAD TO RETEST · ${settings.ghostsShortcut.toUpperCase()} GHOSTS`, 6);
         }
         this.known.forEach((_, id) => { if (!seen.has(id)) this.known.delete(id); });
         if (first) {
             const c = this.counts();
-            this.toast('ready', 'Playmark is on', `${c.open} open · ${c.fixed} fixed`, `${settings.shortcut.toUpperCase()} MARK · ${settings.ghostsShortcut.toUpperCase()} GHOSTS`, 3.5);
+            this.toast('ready', 'Playmark is on', `${c.open} open · ${c.fixed} fixed`, isLan() ? 'MARK BUTTON OR THREE FINGERS' : isTouch() ? 'THREE FINGERS MARK' : `${settings.shortcut.toUpperCase()} MARK · ${settings.ghostsShortcut.toUpperCase()} GHOSTS`, 3.5);
         }
         this.polled = true;
     }
@@ -1039,8 +1087,8 @@ let host: Host | null = null;
 function boot() {
     const q = new URLSearchParams(location.search).get('playmark');
     if (!settings.enabled || q === '0' || !sys.isBrowser) return;
-    // Only on this machine: the sink listens on 127.0.0.1 and answers localhost pages only.
-    if (['localhost', '127.0.0.1', '[::1]', '::1'].indexOf(location.hostname) === -1) return;
+    // Only on this machine (the sink answers localhost pages only), or on a page a LAN sink served.
+    if (!isLan() && ['localhost', '127.0.0.1', '[::1]', '::1'].indexOf(location.hostname) === -1) return;
     try { if (localStorage.getItem(GHOSTS_KEY) === 'off') settings.ghostsVisible = false; } catch { /* private mode */ }
     host = new Host();
 }

@@ -25,7 +25,8 @@ project's `assets/` by hand.
 
 1. **Start the sink** in the project folder and leave it running. A game in a browser can't write
    files; the sink receives each mark and writes `.playmark/`. It listens on 127.0.0.1 only and
-   answers pages served from localhost only. Ctrl+C stops it.
+   answers pages served from localhost only (for a phone, see [Test on your phone](#test-on-your-phone)).
+   Ctrl+C stops it.
 
    ```bash
    node <playmark>/scripts/sink.mjs            # or: sink.mjs path/to/game --port 7477
@@ -40,7 +41,7 @@ project's `assets/` by hand.
    game shows "Fixed #N" and its ghost turns blue. Rebuild and reload to retest.
 
 A script error becomes a bug mark by itself, with the clip and the log (3 per session at most).
-<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>G</kbd> shows or hides ghosts.
+<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>G</kbd> shows or hides ghosts (on a phone: hold the MARK button).
 
 **Approve a fix.** Tap a blue ghost: its card shows your note and what the agent changed. **Approve**
 hides the ghost for good (`approved` in mark.json). **Still broken** sends the mark back to the inbox
@@ -48,6 +49,42 @@ as new, keeping the fix that did not hold in `reopened[]` so the agent sees it. 
 don't judge fade out after 72 hours (`ghostsFixedHours`). An open mark's card has **Dismiss** (a test, or not a
 problem after all): it goes to done/ as approved, so the agent skips it. Ghosts switched off stay off on that
 device across reloads.
+
+## Test on your phone
+
+Play the game on a phone on the same Wi-Fi and mark it there. The marks land on the PC, in the same
+`.playmark/inbox`, and "Fixed #N" shows on the phone.
+
+1. Build the game for web with **Debug** on (`build/web-mobile`).
+2. In the project folder:
+
+   ```bash
+   node <playmark>/scripts/sink.mjs --lan          # or: --lan --serve path/to/web-build --port 7477
+   ```
+
+   It serves the build and prints a URL like `http://192.168.1.20:7477/?pm=Xk3...` and a QR code.
+3. Open that URL on the phone (scan the code with the camera). Tap **MARK**, or three fingers at
+   once, to freeze the game. Tap to pin, drag to box, type the note, **SAVE MARK**.
+
+**The token.** With `--lan` the sink listens on every network of the PC, so anyone on the Wi-Fi
+could reach it. `pm=` is a random token made at each start; the first page turns it into a cookie
+for that one sink. Without it the sink refuses everything from another device: the marks, their
+status (notes included) and the game files. Requests from the PC itself keep the localhost rules,
+so the editor preview still works next to it. Only the PC's own addresses are accepted as a host,
+nothing under the build folder that starts with a dot is served (`.playmark/` included), and files
+outside it are not reachable through `..` or links. Plain HTTP: use a network you trust, and stop
+the sink (Ctrl+C) when you are done.
+
+**Firewall.** If the phone can't load the page, the PC's firewall is blocking Node:
+- Windows: the first `--lan` start may ask to allow Node.js. Allow **Private networks** only. If you
+  dismissed it: Windows Security, Firewall & network protection, Allow an app through firewall,
+  Node.js JavaScript Runtime, tick Private. Check that the Wi-Fi is set to a private network.
+- macOS: if the firewall is on, allow incoming connections for `node` when asked (System Settings,
+  Network, Firewall, Options).
+- Guest Wi-Fi and some office networks keep devices apart; use a home network or a phone hotspot.
+
+Other ways in: the PC's other addresses are printed too (VPN, virtual adapters). `?playmark_sink=`
+still points the page at another sink.
 
 ## Your game's state, and settings
 
@@ -63,7 +100,7 @@ Playmark.settings.clipFps = 0;                          // no clip
 Other settings: `shortcut`, `ghostsShortcut`, `clipSeconds`, `clipMaxWidth` (480), `autoOnError`,
 `logLines`, `ghostsFixedHours`, `sink`. In the page URL, `?playmark=0` turns it off and
 `?playmark_sink=http://127.0.0.1:7478` points it at another sink. It starts only on pages served
-from localhost, because the sink answers only those.
+from localhost, or by `sink.mjs --lan`, because the sink answers only those.
 
 ## What a mark holds
 
@@ -91,10 +128,11 @@ game's console and the engine's own warnings and errors.
 | Cocos Creator 3.8.8, web-mobile debug build, Chrome, Windows 11 | Overlay, pin and box, category, note, rewind, save through the sink, `ui` hits a sprite under a pin, clip sheet, ghosts, "Fixed" toast after `inbox.mjs resolve`, automatic error mark |
 | Release build of the same project | Playmark does not start; a 0.7 KB stub remains |
 | `node cocos/check/typecheck.mjs <project>` | Strict TypeScript at Cocos' ES2015 target |
+| `sink.mjs --lan`, 3.8.8 web-mobile debug build, Chrome emulating an iPhone 13 (touch) over the PC's LAN address | MARK button and three-finger tap open the overlay, tap to pin, category, note, save; both marks in the inbox; "Fixed" toast after `inbox.mjs resolve`; requests without the token, `..` paths and `/.playmark/` refused |
 
 Not checked yet: 3D scenes (the `nodes` path), the editor's browser preview, Safari and Firefox,
-touch (three fingers to open, tap and drag to mark), macOS. A phone over the network can't work
-yet: the sink is local only.
+a real phone (iOS Safari, Android Chrome: the soft keyboard, Safari's own three-finger gestures),
+the firewall prompts, macOS.
 
 ## Limits
 
