@@ -14,7 +14,8 @@ function image(folder, name, alt) {
 }
 
 function engine(m) {
-  if (m.engine && typeof m.engine === "object") return `${m.engine.name === "unity" ? "Unity" : "Godot"} ${m.engine.version ?? ""}`.trim();
+  const names = { unity: "Unity", cocos: "Cocos Creator", three: "three.js", godot: "Godot" };
+  if (m.engine && typeof m.engine === "object") return `${names[m.engine.name] ?? m.engine.name ?? "Godot"} ${m.engine.version ?? ""}`.trim();
   return `Godot ${m.engine ?? ""}`.trim();
 }
 
