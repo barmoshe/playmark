@@ -139,7 +139,12 @@ export function lanAddresses() {
   return out;
 }
 
-const sameToken = (a, b) => typeof a === "string" && a.length === b.length && crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b));
+// Byte lengths, not string lengths: timingSafeEqual throws on unequal buffers, and a crafted token must not crash the sink.
+const sameToken = (a, b) => {
+  if (typeof a !== "string") return false;
+  const x = Buffer.from(a), y = Buffer.from(b);
+  return x.length === y.length && crypto.timingSafeEqual(x, y);
+};
 
 const TYPES = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".mjs": "text/javascript", ".css": "text/css", ".json": "application/json",
   ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp", ".svg": "image/svg+xml", ".ico": "image/x-icon",

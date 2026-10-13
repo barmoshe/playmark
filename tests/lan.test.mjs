@@ -138,3 +138,12 @@ test("the QR code is the one OpenCV decoded (2026-10-13) for a sink URL", () => 
   assert.equal(h, 3891004324);
   assert.throws(() => qrMatrix("x".repeat(200)), /too long/);
 });
+
+test("LAN mode: a token with multi-byte characters is refused, not a crash", { skip: !lanIp && "no network address" }, async () => {
+  const { game, root } = project();
+  await withSink(root, { lan: true, serve: game, token: TOKEN }, async (port) => {
+    const bad = encodeURIComponent("é".repeat(TOKEN.length));
+    assert.equal((await request(port, "GET", `/playmark/status?pm=${bad}`)).status, 403);
+    assert.equal((await request(port, "GET", `/playmark/status?pm=${TOKEN}`)).status, 200, "the sink is still up");
+  });
+});
