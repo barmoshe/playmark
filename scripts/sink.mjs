@@ -181,9 +181,19 @@ const MARKER = "<script>window.PLAYMARK_LAN=1</script>";
  * Default: localhost only, as described at the top. `serve`: also serves that folder.
  * `lan` + `token`: also answers this machine's network addresses, when the request carries the token.
  */
+// Hostile input (a malformed URL, a bad header) must get a 400, never take the sink down.
+const safe = (handler) => (req, res) => {
+  try {
+    handler(req, res);
+  } catch {
+    if (!res.headersSent) res.writeHead(400, { "content-type": "text/plain" }).end("Bad request\n");
+    else res.destroy();
+  }
+};
+
 export function createSink(root, { lan = false, serve = null, token = "" } = {}) {
   if (lan && (!serve || !token)) throw new Error("LAN mode needs a folder to serve and a token");
-  return http.createServer((req, res) => {
+  return http.createServer(safe((req, res) => {
     const origin = req.headers.origin;
     const lanHosts = lan ? new Set(lanAddresses().map((a) => a.address)) : new Set();
     const known = (value) => {
@@ -271,7 +281,7 @@ export function createSink(root, { lan = false, serve = null, token = "" } = {})
     } else {
       send(404, { error: "not found" });
     }
-  });
+  }));
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

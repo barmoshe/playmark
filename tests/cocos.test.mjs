@@ -166,3 +166,19 @@ test("dismiss: an open test mark goes to done as fixed and approved, and only an
   });
   assert.match(run("scripts/inbox.mjs", ["list"], game), /\(0 new, 1 fixed\)/);
 });
+
+test("a malformed request line gets an error, and the sink keeps answering", async () => {
+  const { game } = cocosProject();
+  const root = path.join(game, ".playmark");
+  await withSink(root, async (port) => {
+    const net = await import("node:net");
+    const reply = await new Promise((resolve) => {
+      const s = net.connect(port, "127.0.0.1", () => s.write(`GET //[ HTTP/1.1\r\nHost: 127.0.0.1:${port}\r\nConnection: close\r\n\r\n`));
+      let text = "";
+      s.on("data", (c) => (text += c));
+      s.on("close", () => resolve(text));
+    });
+    assert.match(reply, /^HTTP\/1\.1 400/);
+    assert.equal((await request(port, "GET", "/playmark/status")).status, 200);
+  });
+});
