@@ -182,3 +182,20 @@ test("a malformed request line gets an error, and the sink keeps answering", asy
     assert.equal((await request(port, "GET", "/playmark/status")).status, 200);
   });
 });
+
+test("inbox reopen clears an approval and keeps the fix that did not hold; export names Cocos", async () => {
+  const { game } = cocosProject();
+  const root = path.join(game, ".playmark");
+  await withSink(root, async (port) => {
+    const a = (await request(port, "POST", "/playmark/marks", { body: mark("Reopen from the CLI") })).json;
+    run("scripts/inbox.mjs", ["resolve", String(a.seq), "--note", "first try"], game);
+    assert.equal((await request(port, "POST", `/playmark/marks/${a.id}/verdict`, { body: { verdict: "approved" } })).status, 200);
+  });
+  run("scripts/inbox.mjs", ["reopen", "1"], game);
+  const saved = JSON.parse(fs.readFileSync(path.join(root, "inbox", fs.readdirSync(path.join(root, "inbox"))[0], "mark.json"), "utf8"));
+  assert.equal(saved.approved, undefined);
+  assert.equal(saved.resolution, undefined);
+  assert.equal(saved.reopened[0].resolution.note, "first try");
+  run("scripts/inbox.mjs", ["export"], game);
+  assert.match(fs.readFileSync(path.join(root, "export", "marks.html"), "utf8"), /Cocos Creator 3\.8\.8/);
+});

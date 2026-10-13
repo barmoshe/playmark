@@ -829,7 +829,13 @@ class Host {
             const W = this.canvas.width, H = this.canvas.height;
             let under: Record<string, Json>[];
             this.log.mute = true;
-            try { under = underMarks(marks, W, H); } finally { this.log.mute = false; }
+            // A rewound frame shows an earlier moment than the paused scene: what is under its marks now may not be
+            // what was there, so nothing is listed rather than the wrong objects.
+            try {
+                under = offset < 0
+                    ? marks.map((_, i) => ({ mark: i + 1, physics: [], nodes: [], ui: [], skipped: 'rewound frame: the scene has moved on since' }))
+                    : underMarks(marks, W, H);
+            } finally { this.log.mute = false; }
             const markList = marks.map((m, i) => {
                 const d: Record<string, Json> = { type: m.box ? 'box' : 'pin', x: r1(m.x * image.width), y: r1(m.y * image.height) };
                 if (m.box) { d.w = r1(m.w * image.width); d.h = r1(m.h * image.height); }
