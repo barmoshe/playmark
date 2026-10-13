@@ -234,6 +234,11 @@ switch (cmd) {
     const target = path.join(root, "inbox", m.id);
     fs.renameSync(m.folder, target);
     const data = JSON.parse(fs.readFileSync(path.join(target, "mark.json"), "utf8"));
+    // Same as a reopen from the game: the fix that did not hold goes to reopened[], and an approval no longer stands.
+    if (data.resolution) data.reopened = [...(Array.isArray(data.reopened) ? data.reopened : []), { at: new Date().toISOString().slice(0, 19), note: "reopened with inbox.mjs", resolution: data.resolution }];
+    delete data.resolution;
+    delete data.approved;
+    delete data.dismissed;
     data.status = "new";
     fs.writeFileSync(path.join(target, "mark.json"), JSON.stringify(data, null, 2) + "\n");
     console.log(`Reopened ${m.id}`);
