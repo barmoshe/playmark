@@ -4,10 +4,13 @@
 
 # Playmark
 
-**Mark what you see while playing your Godot or Unity game. Claude Code or Codex fixes it.**
+**Mark what you see while playing your game. Claude Code or Codex fixes it.**
+
+Godot · Unity · Cocos Creator · three.js
 
 [![ci](https://github.com/barmoshe/playmark/actions/workflows/ci.yml/badge.svg)](https://github.com/barmoshe/playmark/actions/workflows/ci.yml)
-![Godot 4.5+ · Unity 6 beta](https://img.shields.io/badge/Godot%204.5%2B%20·%20Unity%206%20beta-478cbf)
+![Godot 4.5+](https://img.shields.io/badge/Godot-4.5%2B-478cbf)
+![Unity 6 · Cocos 3.8 · three.js (beta)](https://img.shields.io/badge/beta-Unity%206%20·%20Cocos%203.8%20·%20three.js-555)
 ![Claude Code · Codex](https://img.shields.io/badge/Claude%20Code%20·%20Codex-plugin-f2621b)
 [![MIT](https://img.shields.io/badge/license-MIT-lightgrey)](LICENSE)
 
@@ -22,8 +25,8 @@
 <br>
 
 Playtesting your own game, you notice small things you'd rather not stop and write up.
-Playmark is a Godot addon and a Unity package, plus a plugin for Claude Code and Codex, for exactly
-that moment. Press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>M</kbd>: the game freezes, you pin what you
+Playmark is a Godot addon, a Unity package and a Cocos Creator script and three.js module, plus a
+plugin for Claude Code and Codex, for exactly that moment. Press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>M</kbd>: the game freezes, you pin what you
 mean and write one line. Your agent gets the frame, the last five seconds, the log and the code
 under your pin, and fixes it. Back in the game, a toast says "Fixed" and a marker stays where you left the note.
 
@@ -43,7 +46,7 @@ Three short films, narrated and captioned. Click a frame to play it; each also c
 
 ```mermaid
 flowchart LR
-  A["Play 🎮<br/>Godot or Unity"] -->|"Ctrl+Shift+M"| B["Mark 📍<br/>pin · box · note"]
+  A["Play 🎮<br/>Godot · Unity · Cocos · three.js"] -->|"Ctrl+Shift+M"| B["Mark 📍<br/>pin · box · note"]
   B -->|".playmark/inbox"| C["Your agent 🤖<br/>Claude Code or Codex"]
   C -->|"fix + resolve"| D["In game ✅<br/>Fixed #N · ghost marker"]
   D --> A
@@ -51,7 +54,7 @@ flowchart LR
 
 <table>
 <tr>
-<td width="25%" valign="top"><b>1. Play</b><br>Run your game from Godot or Unity. Playmark keeps the last five seconds.</td>
+<td width="25%" valign="top"><b>1. Play</b><br>Run your game: Godot, Unity, Cocos Creator or three.js. Playmark keeps the last five seconds.</td>
 <td width="25%" valign="top"><b>2. Mark</b><br><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>M</kbd> freezes the frame. Click to pin, drag to box, <kbd>1</kbd>-<kbd>5</kbd> for a category, type the note.</td>
 <td width="25%" valign="top"><b>3. The agent fixes</b><br>It reads the frame, finds the code under the pin and proposes a fix. You pick.</td>
 <td width="25%" valign="top"><b>4. Retest</b><br>The game shows "Fixed #N" with what changed. The marker stays where you made it.</td>

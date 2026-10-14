@@ -50,7 +50,7 @@ Play, then <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>M</kbd>.
 Package Manager, **+**, **Add package from git URL**:
 
 ```
-https://github.com/barmoshe/playmark.git?path=/unity/com.bar-builds.playmark#v0.4.0
+https://github.com/barmoshe/playmark.git?path=/unity/com.bar-builds.playmark#v0.5.0
 ```
 
 Use a release tag that includes the `unity/` folder (0.4.0 or later). `/playmark:install --git`

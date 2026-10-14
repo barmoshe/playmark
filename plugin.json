@@ -1,7 +1,7 @@
 {
   "name": "playmark",
   "version": "0.5.0",
-  "description": "Mark what you see while playing your Godot or Unity game, write a note, and hand it to Claude Code or Codex: the frame, the last seconds of play, the log and the code under your pin. Fixes show up in the game.",
+  "description": "Mark what you see while playing your Godot, Unity, Cocos Creator or three.js game, write a note, and hand it to Claude Code or Codex: the frame, the last seconds of play, the log and the code under your pin. Fixes show up in the game.",
   "author": {
     "name": "Bar Moshe"
   },
@@ -11,6 +11,8 @@
   "keywords": [
     "godot",
     "unity",
+    "threejs",
+    "cocos",
     "gamedev",
     "playtest",
     "feedback",
