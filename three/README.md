@@ -58,9 +58,12 @@ three.js has no global pause, so Playmark freezes what it can:
   the overlay is open. Your game then sees one long frame on resume: clamp your delta time.
 - Otherwise (your own `requestAnimationFrame` loop, or `setAnimationLoop` called before `attach`)
   the game keeps running behind the overlay, and the overlay says `GAME STILL RUNNING`. The frame
-  you mark is still the one you froze.
+  you mark is still the one you froze, but the scene has moved on by the time you save, so the
+  mark lists nothing under the pin (`"skipped"`) rather than the wrong objects, and says
+  `"frozen": false`. Pass `onPause`/`onResume` to get the objects back.
 
-The overlay takes every pointer and key while it is open, and leaves pointer lock.
+The overlay takes every click and key while it is open (keyups still reach the game, so a key
+held when it opened is let go), and leaves pointer lock.
 
 ## Your game's state, and settings
 
@@ -68,6 +71,7 @@ The overlay takes every pointer and key while it is open, and leaves pointer loc
 Playmark.addContext('player', () => ({ hp, level }));  // on every mark
 Playmark.setScope(() => currentLevel);                  // ghosts per level
 Playmark.attach({ renderer, scene, camera: newCamera }); // again when the game switches camera
+Playmark.detach();                                        // stop, and give the renderer back (a remount calls attach again)
 Playmark.settings.project = { name: 'Star Dodger', version: '1.2' };
 Playmark.settings.clipFps = 0;                          // no clip
 ```

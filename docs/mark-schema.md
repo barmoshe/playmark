@@ -40,6 +40,7 @@ Playmark's engine side (the Godot addon, the Unity package, the Cocos script, th
 | `note` | string | the player's words |
 | `marks[]` | object | `type` (`pin` \| `box`), `number`, `x`, `y` (`w`, `h` for boxes) in the marked frame's pixels, `color`, `norm` (the same in 0..1), `world` (where it is in the game world: `[x, y]` in Godot 2D, `[x, y, z]` in Unity) |
 | `frame_offset_s` | number | 0 for the freeze frame, negative for a rewound one |
+| `frozen` | bool | three.js only: false when the game kept running while the player marked; `under_marks` then lists nothing (`skipped`) |
 | `scope` | string | the game's room or area, from `set_scope` / `SetScope` |
 | `project` | `{name, version}` | |
 | `engine` | `{name, version}` | `name` is `godot`, `unity`, `cocos` or `three` (version: `THREE.REVISION`). A bare string in marks before schema 2 means Godot. |

@@ -48,7 +48,9 @@ export const Playmark = {
      */
     attach({ renderer, scene, camera, onPause = null, onResume = null, anyHost = false }) {
         if (!renderer || !scene || !camera) throw new Error('Playmark.attach needs { renderer, scene, camera }');
-        if (host) { Object.assign(host, { scene, camera }); return; }
+        // Same renderer: a new scene or camera. A new renderer (a remount, a context-loss rebuild): start over on it.
+        if (host && host.renderer === renderer) { Object.assign(host, { scene, camera }, onPause ? { onPause, onResume } : {}); return; }
+        if (host) { host.detach(); host = null; }
         const q = new URLSearchParams(location.search).get('playmark');
         if (!settings.enabled || q === '0') return;
         // Only on this machine by default: the sink listens on 127.0.0.1 and answers localhost pages only.
@@ -60,6 +62,8 @@ export const Playmark = {
     setScope(fn) { scopeFn = fn; },
     /** Opens the overlay as if the shortcut was pressed. */
     open() { host?.requestOpen(); },
+    /** Stops Playmark and gives the renderer back its own render and setAnimationLoop. */
+    detach() { host?.detach(); host = null; },
 };
 
 // --- The overlay: photo mode for feedback --------------------------------------------------
@@ -96,7 +100,9 @@ class Overlay {
         this.drag = null;
         this.dragTo = { x: 0, y: 0, px: 0, py: 0 };
         this.keyHandler = (e) => this.onKey(e);
-        this.stopKey = (e) => e.stopPropagation();
+        // Clicks on the overlay are not the game's: a document-level click handler (PointerLockControls'
+        // usual lock()) or a fire-on-pointerdown must not see them.
+        this.stopPointer = (e) => e.stopPropagation();
         this.draw = () => this.redraw();
         this.root = document.createElement('div');
         this.root.setAttribute('data-playmark', 'overlay');
@@ -105,10 +111,12 @@ class Overlay {
             display: 'flex', flexDirection: 'column', font: `13px ${BRAND.sans}`, userSelect: 'none', touchAction: 'none',
         });
         this.build();
+        for (const t of ['pointerdown', 'pointerup', 'mousedown', 'mouseup', 'click', 'dblclick', 'contextmenu', 'wheel', 'touchstart', 'touchmove', 'touchend'])
+            this.root.addEventListener(t, this.stopPointer);
         document.body.appendChild(this.root);
         // Capture phase on window: the game's own key listeners never see a key typed here.
         window.addEventListener('keydown', this.keyHandler, true);
-        window.addEventListener('keyup', this.stopKey, true);
+        // Keyups go through: a key held when the overlay opened must still be let go in the game.
         window.addEventListener('resize', this.draw);
         this.draw();
     }
@@ -151,7 +159,6 @@ class Overlay {
 
     close() {
         window.removeEventListener('keydown', this.keyHandler, true);
-        window.removeEventListener('keyup', this.stopKey, true);
         window.removeEventListener('resize', this.draw);
         this.root.remove();
         this.onClose?.();
@@ -417,7 +424,7 @@ class LogRing {
         if (level === 'Error' && stack) for (const l of stack.trim().split('\n')) this.push('    ' + l.trim());
         if (level === 'Error' && !this.mute && !message.startsWith('Playmark')) {
             const first = message.split('\n')[0].slice(0, 200);
-            if (!this.seen.has(first)) { this.seen.add(first); this.errors.push(first); }
+            if (!this.seen.has(first) && this.errors.length < 10) { this.seen.add(first); this.errors.push(first); }
         }
     }
 
@@ -455,9 +462,22 @@ function hookLogs(log) {
 
 // --- What is under a mark -----------------------------------------------------------------
 
-/** Raycaster ignores `visible`: a hidden object, or one under a hidden parent, isn't on screen. */
+/** An http(s) URL on this machine: localhost, 127.x or [::1]. */
+function isLoopbackUrl(u) {
+    const m = /^https?:\/\/(\[[^\]]+\]|[^/:?#]+)(:\d+)?(\/|$)/i.exec(String(u).trim());
+    if (!m) return false;
+    const h = m[1].toLowerCase();
+    return h === 'localhost' || h === '[::1]' || /^127(\.\d{1,3}){3}$/.test(h);
+}
+
+/**
+ * Raycaster ignores `visible`: a hidden object, or one under a hidden parent, isn't on screen.
+ * Neither is a mesh whose materials are all invisible (the usual collider or trigger volume).
+ */
 function shown(o) {
     for (let p = o; p; p = p.parent) if (!p.visible) return false;
+    const mats = Array.isArray(o.material) ? o.material : o.material ? [o.material] : [];
+    if (mats.length && mats.every((m) => m.visible === false)) return false;
     return true;
 }
 
@@ -527,6 +547,9 @@ function underMarks(marks, scene, camera) {
             }
         } else {
             ray.setFromCamera(new THREE.Vector2(m.x * 2 - 1, 1 - m.y * 2), camera);
+            // SkinnedMesh and InstancedMesh cache their bounding sphere at the first raycast: an
+            // animated character or moved instances would be missed with the old one.
+            scene.traverse((o) => { if ((o.isSkinnedMesh || o.isInstancedMesh) && o.computeBoundingSphere) o.computeBoundingSphere(); });
             const seen = new Set();
             for (const h of ray.intersectObject(scene, true)) {
                 const key = `${h.object.uuid}:${h.instanceId ?? ''}`;
@@ -636,15 +659,20 @@ class Host {
         hookLogs(this.log);
         this.hud = this.layer({ left: 'calc(10px + env(safe-area-inset-left, 0px))', bottom: 'calc(10px + env(safe-area-inset-bottom, 0px))', display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-start' });
         this.ghostLayer = this.layer({ inset: '0' });
-        window.addEventListener('keydown', (e) => this.onKey(e), true);
-        window.addEventListener('pointermove', (e) => { this.mouse = { x: e.clientX, y: e.clientY }; }, true);
-        // Phones have no keyboard: three fingers at once open the overlay.
-        window.addEventListener('touchstart', (e) => { if (e.touches.length === 3) this.requestOpen(); }, true);
+        this.listeners = [
+            ['keydown', (e) => this.onKey(e)],
+            ['pointermove', (e) => { this.mouse = { x: e.clientX, y: e.clientY }; }],
+            // Phones have no keyboard: three fingers at once open the overlay.
+            ['touchstart', (e) => { if (e.touches.length === 3) this.requestOpen(); }],
+        ];
+        for (const [t, f] of this.listeners) window.addEventListener(t, f, true);
 
         // WebGL clears the drawing buffer once the page shows a frame (unless preserveDrawingBuffer).
         // A frame can take several render() calls (a HUD scene on top, post-processing), so the copy
         // waits for a microtask after the last one to the screen: still before the browser shows it.
         const render = renderer.render;
+        this.ownRender = render;
+        this.ownSetLoop = renderer.setAnimationLoop;
         const self = this;
         renderer.render = function (s, c) {
             render.call(this, s, c);
@@ -662,6 +690,19 @@ class Host {
         this.loop();
     }
 
+    /** Gives the renderer back, closes the overlay (resuming the game) and removes everything Playmark added. */
+    detach() {
+        this.dead = true;
+        if (this.overlay) this.overlay.close?.();
+        if (this.overlay || this.loopStopped) this.resume();
+        this.renderer.render = this.ownRender;
+        this.renderer.setAnimationLoop = this.ownSetLoop;
+        for (const [t, f] of this.listeners) window.removeEventListener(t, f, true);
+        this.hud.remove();
+        this.ghostLayer.remove();
+        this.overlay = null;
+    }
+
     layer(style) {
         const d = document.createElement('div');
         d.setAttribute('data-playmark', 'hud');
@@ -675,12 +716,26 @@ class Host {
         this.opening = true;
         if (!this.sinkUp) this.poll(); // the sink may have started since the last try
         // A game that renders only on change: draw once to get a frame (without its post-processing).
-        setTimeout(() => { if (this.opening) this.renderer.render(this.scene, this.camera); }, OPEN_WAIT_MS);
+        setTimeout(() => {
+            if (!this.opening || this.dead) return;
+            // To the screen, even if the game left a render target bound; put it back after.
+            const target = this.renderer.getRenderTarget();
+            this.renderer.setRenderTarget(null);
+            this.renderer.render(this.scene, this.camera);
+            this.renderer.setRenderTarget(target);
+            if (this.opening) { this.opening = false; this.open(); } // nothing drew: open on what the canvas has
+        }, OPEN_WAIT_MS);
     }
 
     async loop() {
-        if (!document.hidden) await this.poll();
-        setTimeout(() => this.loop(), this.sinkUp ? POLL_MS : POLL_IDLE_MS);
+        if (this.dead) return;
+        try {
+            if (!document.hidden) await this.poll();
+        } catch (e) {
+            console.warn('Playmark: status poll failed', e);
+        } finally {
+            if (!this.dead) setTimeout(() => this.loop(), this.sinkUp ? POLL_MS : POLL_IDLE_MS);
+        }
     }
 
     onKey(e) {
@@ -702,8 +757,8 @@ class Host {
         if (now - this.fpsSince >= 1000) { this.fps = Math.round(this.fpsFrames * 1000 / (now - this.fpsSince)); this.fpsFrames = 0; this.fpsSince = now; }
         if (this.opening) { this.opening = false; this.open(); return; }
         if (this.overlay) return;
-        const err = this.log.errors.shift();
-        if (err && settings.autoOnError && this.sinkUp && !this.busy && this.autoMarks < MAX_AUTO_MARKS) { this.autoMark(err); return; }
+        // An error waits in the queue until the sink answers and no mark is saving.
+        if (this.log.errors.length && settings.autoOnError && this.sinkUp && !this.busy && this.autoMarks < MAX_AUTO_MARKS) { this.autoMark(this.log.errors.shift()); return; }
         this.captureClip(now);
         this.drawGhosts();
     }
@@ -771,7 +826,7 @@ class Host {
         ov.onSubmit = (s) => {
             const image = s.frameIndex < 0 ? shot : frames[s.frameIndex].canvas;
             const offset = s.frameIndex < 0 ? 0 : frames[s.frameIndex].offset;
-            this.save(image, frames, s.marks, s.note, s.category, offset, 'player', mouse, time)
+            this.save(image, frames, s.marks, s.note, s.category, offset, 'player', mouse, time, frozen)
                 .then((saved) => { this.session++; ov.finish(true, saved.seq); })
                 .catch((e) => ov.finish(false, seq, this.sinkUp ? e.message : `No sink at ${this.sinkUrl()}. Start it: node <playmark>/scripts/sink.mjs`));
         };
@@ -797,15 +852,17 @@ class Host {
         return [r1((this.mouse.x - r.left) * this.canvas.width / Math.max(1, r.width)), r1((this.mouse.y - r.top) * this.canvas.height / Math.max(1, r.height))];
     }
 
-    async save(image, frames, marks, note, category, offset, source, mouse, time) {
+    async save(image, frames, marks, note, category, offset, source, mouse, time, frozen = true) {
         this.busy = true;
         try {
             let under;
             this.log.mute = true;
             // A rewound frame shows an earlier moment than the scene now: list nothing rather than the wrong objects.
             try {
-                under = offset < 0
-                    ? marks.map((_, i) => ({ mark: i + 1, physics: [], nodes: [], ui: [], skipped: "rewound frame: the scene has moved on since" }))
+                // So did a game that kept running while the player marked (no onPause, no setAnimationLoop to stop).
+                const moved = offset < 0 ? 'rewound frame: the scene has moved on since' : !frozen ? 'the game kept running while marking: the scene has moved on since' : '';
+                under = moved
+                    ? marks.map((_, i) => ({ mark: i + 1, physics: [], nodes: [], ui: [], skipped: moved }))
                     : underMarks(marks, this.scene, this.camera);
             } finally { this.log.mute = false; }
             const markList = marks.map((m, i) => {
@@ -828,6 +885,7 @@ class Host {
                 source, category, note,
                 marks: markList,
                 frame_offset_s: r3(offset),
+                frozen,
                 scope: this.scope(),
                 project: { name: settings.project.name || document.title, version: settings.project.version },
                 engine: { name: 'three', version: THREE.REVISION },
@@ -872,9 +930,10 @@ class Host {
         try { return scopeFn?.() ?? ''; } catch { return ''; }
     }
 
+    /** ?playmark_sink= may only point at this machine: another host would get every mark. */
     sinkUrl() {
         const q = new URLSearchParams(location.search).get('playmark_sink');
-        return (q || settings.sink).replace(/\/$/, '');
+        return (q && isLoopbackUrl(q) ? q : settings.sink).replace(/\/$/, '');
     }
 
     nextSeq() {
@@ -896,6 +955,7 @@ class Host {
         try {
             const res = await fetch(`${this.sinkUrl()}/playmark/status`, { cache: 'no-store' });
             list = (await res.json()).marks;
+            if (!Array.isArray(list)) throw new Error('not a Playmark sink');
         } catch {
             if (!this.polled) this.toast('error', 'Playmark: no sink', 'Marks need the sink. In the project folder: node <playmark>/scripts/sink.mjs', `${settings.shortcut.toUpperCase()} STILL OPENS THE OVERLAY`, 8);
             this.polled = true;
@@ -943,7 +1003,7 @@ class Host {
         const now = Date.now();
         const out = [];
         this.known.forEach((m) => {
-            if (m.scene !== scene || (m.scope ?? '') !== scope) return;
+            if (m.scene !== scene || (m.scope ?? '') !== scope || m.approved) return; // approved (or dismissed): done
             if (m.status === 'fixed' && settings.ghostsFixedHours >= 0 && m.modified && now - m.modified > settings.ghostsFixedHours * 3600e3) return;
             const world = m.marks?.[0]?.world;
             if (Array.isArray(world) && world.length >= 2) out.push(m);
