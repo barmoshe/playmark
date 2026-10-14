@@ -18,6 +18,7 @@ import path from "node:path";
 import { execFileSync, spawn } from "node:child_process";
 import { findRoots, listMarks, findMark, oneLine } from "./lib.mjs";
 import { exportMarks } from "./export.mjs";
+import { isCocos, isThree } from "./sink.mjs";
 
 const [cmd = "list", ...rest] = process.argv.slice(2);
 const flag = (name) => {
@@ -45,12 +46,15 @@ function summary(m) {
 
 // Godot marks before schema 2 carry the engine as a bare version string.
 function engineLabel(m) {
-  if (m.engine && typeof m.engine === "object") return `${m.engine.name === "unity" ? "Unity" : "Godot"} ${m.engine.version ?? ""}`.trim();
+  const names = { unity: "Unity", cocos: "Cocos Creator", three: "three.js", godot: "Godot" };
+  if (m.engine && typeof m.engine === "object") return `${names[m.engine.name] ?? m.engine.name ?? "Godot"} ${m.engine.version ?? ""}`.trim();
   return `Godot ${m.engine ?? ""}`.trim();
 }
 
 const isUnity = (project) => fs.existsSync(path.join(project, "ProjectSettings", "ProjectVersion.txt"));
-const isProject = (dir) => isUnity(dir) || fs.existsSync(path.join(dir, "project.godot"));
+const isProject = (dir) => isUnity(dir) || isCocos(dir) || isThree(dir) || fs.existsSync(path.join(dir, "project.godot"));
+// Cocos and three.js run in a browser: no editor to ask for a run, no command line to warp with (yet).
+const noWebRuns = (what, engine) => die(`${what} isn't available for ${engine} yet. Open the game in the browser and look; say what you could not check.`);
 
 // Smoke checks a fresh install, before anyone has played: the game's .playmark may not exist yet.
 function projectRoot() {
@@ -118,7 +122,7 @@ switch (cmd) {
       const done = listMarks(root, "done");
       console.log(`${root}  (${inbox.length} new, ${done.length} fixed)`);
       for (const m of inbox) console.log("  " + summary(m));
-      if (rest.includes("--all")) for (const m of done) console.log("  ✓ " + summary(m));
+      if (rest.includes("--all")) for (const m of done) console.log((m.approved ? "  ✓✓ " : "  ✓ ") + summary(m));
     }
     break;
   }
@@ -127,8 +131,11 @@ switch (cmd) {
     const f = (name) => path.join(m.folder, name);
     console.log(`# Mark #${m.seq} ${m.id} (${m.status}${m.source === "auto-error" ? ", auto-captured on an error" : ""})`);
     console.log(`category: ${m.category || "-"}\nnote: ${m.note || "(none)"}`);
+    if (m.dismissed) console.log(`dismissed by the player in the game: ${m.approved?.at ?? ""} (not fixed: a test, or not a problem)`);
+    else if (m.approved) console.log(`approved by the player in the game: ${m.approved.at}`);
+    for (const r of m.reopened ?? []) console.log(`reopened by the player ${r.at}: the earlier fix ("${r.resolution?.note ?? ""}") did not hold${r.note ? `; they said: ${r.note}` : ""}`);
     console.log(`game: ${m.project?.name} ${m.project?.version} · ${engineLabel(m)} · ${m.os}${m.render_pipeline ? " · " + m.render_pipeline : ""}`);
-    console.log(`scene: ${m.scene?.path}   at ${m.uptime_s}s, ${m.fps} fps, time_scale ${m.time_scale}`);
+    console.log(`scene: ${m.scene?.path}   at ${m.uptime_s}s, ${m.fps} fps${m.time_scale === undefined ? "" : `, time_scale ${m.time_scale}`}`);
     console.log(`\nRead these images:\n  ${f("annotated.png")}   (marks numbered on the frame)`);
     if (m.clip?.frames) console.log(`  ${f("clip_sheet.png")}   (last ${m.clip.frames} frames, oldest first, left to right)`);
     console.log(`  ${f("screenshot.png")}   (clean frame)`);
@@ -167,6 +174,8 @@ switch (cmd) {
     const { root, mark: m } = need(rest[0]);
     const project = path.dirname(root);
     const shotPath = flag("--shot");
+    if (isCocos(project)) noWebRuns("warp", "Cocos Creator");
+    if (isThree(project) && !isUnity(project) && !fs.existsSync(path.join(project, "project.godot"))) noWebRuns("warp", "three.js");
     if (isUnity(project) && !process.env.PLAYMARK_UNITY_PLAYER) {
       const result = unityRequest(root, { action: "warp", mark: m.id, ...(shotPath ? { shot: path.resolve(shotPath) } : {}) }, Boolean(shotPath));
       if (result) console.log(result.shot ?? path.resolve(shotPath));
@@ -226,6 +235,11 @@ switch (cmd) {
     const target = path.join(root, "inbox", m.id);
     fs.renameSync(m.folder, target);
     const data = JSON.parse(fs.readFileSync(path.join(target, "mark.json"), "utf8"));
+    // Same as a reopen from the game: the fix that did not hold goes to reopened[], and an approval no longer stands.
+    if (data.resolution) data.reopened = [...(Array.isArray(data.reopened) ? data.reopened : []), { at: new Date().toISOString().slice(0, 19), note: "reopened with inbox.mjs", resolution: data.resolution }];
+    delete data.resolution;
+    delete data.approved;
+    delete data.dismissed;
     data.status = "new";
     fs.writeFileSync(path.join(target, "mark.json"), JSON.stringify(data, null, 2) + "\n");
     console.log(`Reopened ${m.id}`);
@@ -246,9 +260,11 @@ switch (cmd) {
   }
   case "smoke": {
     const root = roots[0] ?? projectRoot();
-    if (!root) die("No Godot or Unity project here. Run /playmark:install first.");
+    if (!root) die("No Godot, Unity, Cocos or three.js project here. Run /playmark:install first.");
     const project = path.dirname(root);
     const out = path.resolve(flag("--out") ?? path.join(root, "smoke"));
+    if (isCocos(project)) noWebRuns("smoke", "Cocos Creator");
+    if (isThree(project) && !isUnity(project) && !fs.existsSync(path.join(project, "project.godot"))) noWebRuns("smoke", "three.js");
     if (isUnity(project)) {
       unityRequest(root, { action: "smoke", out }, true);
     } else {

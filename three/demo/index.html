@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Playmark three.js demo</title>
+<style>html, body { margin: 0; height: 100%; background: #111; } canvas { display: block; width: 100%; height: 100%; }</style>
+<!-- three is pinned in package.json: run npm install here, then serve the three/ folder (one level up). -->
+<script type="importmap">{ "imports": { "three": "./node_modules/three/build/three.module.js" } }</script>
+</head>
+<body>
+<script type="module">
+import * as THREE from 'three';
+import { Playmark } from '../playmark.js';
+
+const renderer = new THREE.WebGLRenderer({ antialias: true }); // preserveDrawingBuffer stays off on purpose
+renderer.setPixelRatio(devicePixelRatio);
+renderer.setSize(innerWidth, innerHeight);
+renderer.autoClear = false;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.name = 'Toy';
+scene.background = new THREE.Color('#20242c');
+const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.1, 100);
+camera.name = 'MainCamera';
+camera.position.set(0, 3, 8);
+camera.lookAt(0, 0.5, 0);
+scene.add(new THREE.HemisphereLight('#ffffff', '#445', 2));
+const sun = new THREE.DirectionalLight('#ffffff', 2);
+sun.position.set(3, 6, 4);
+scene.add(sun);
+
+const mat = (name, color) => Object.assign(new THREE.MeshStandardMaterial({ color }), { name });
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(14, 14), mat('Grass', '#3c6e47'));
+ground.name = 'Ground';
+ground.rotation.x = -Math.PI / 2;
+scene.add(ground);
+const props = new THREE.Group();
+props.name = 'Props';
+scene.add(props);
+const cube = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.2, 1.2), mat('Brick', '#d9534f'));
+cube.name = 'RedCube';
+cube.position.set(-2.5, 0.6, 0);
+cube.userData = { hp: 3, kind: 'crate' };
+const sphere = new THREE.Mesh(new THREE.SphereGeometry(0.8, 32, 16), mat('Water', '#4a90d9'));
+sphere.name = 'BlueSphere';
+sphere.position.set(0, 0.8, 0);
+const cone = new THREE.Mesh(new THREE.ConeGeometry(0.7, 1.6, 24), mat('Leaf', '#5cb85c'));
+cone.name = 'GreenCone';
+cone.position.set(2.5, 0.8, 0);
+props.add(cube, sphere, cone);
+
+// A HUD drawn by a second render() on top, as many games do: the capture must hold both.
+const hud = new THREE.Scene();
+const hudCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+const bar = new THREE.Mesh(new THREE.PlaneGeometry(0.6, 0.06), new THREE.MeshBasicMaterial({ color: '#f2c14e' }));
+bar.position.set(-0.6, 0.9, 0);
+hud.add(bar);
+
+Playmark.addContext('demo', () => ({ cubeHp: cube.userData.hp }));
+Playmark.attach({ renderer, scene, camera });   // before setAnimationLoop, so the overlay can stop the loop
+
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+let t = 0;
+renderer.setAnimationLoop((ms) => {
+  t = ms / 1000;
+  cube.rotation.y = t;
+  cone.position.y = 0.8 + Math.sin(t * 2) * 0.3;
+  renderer.clear();
+  renderer.render(scene, camera);
+  renderer.clearDepth();
+  renderer.render(hud, hudCam);
+});
+window.demo = { THREE, scene, camera, renderer, sphere, frameTime: () => t };
+</script>
+</body>
+</html>

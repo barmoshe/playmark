@@ -10,10 +10,12 @@ try {
   for (const root of findRoots()) {
     const seenFile = path.join(root, ".announced");
     const seen = new Set(fs.existsSync(seenFile) ? fs.readFileSync(seenFile, "utf8").split("\n").filter(Boolean) : []);
-    const marks = listMarks(root, "inbox").filter((m) => !seen.has(m.id));
+    // A mark the player sent back ("still broken") is news again: count its reopenings in the key.
+    const key = (m) => (Array.isArray(m.reopened) && m.reopened.length ? `${m.id}#${m.reopened.length}` : m.id);
+    const marks = listMarks(root, "inbox").filter((m) => !seen.has(key(m)));
     if (!marks.length) continue;
     fresh.push(...marks.map((m) => ({ ...m, root })));
-    fs.writeFileSync(seenFile, [...seen, ...marks.map((m) => m.id)].join("\n") + "\n");
+    fs.writeFileSync(seenFile, [...seen, ...marks.map(key)].join("\n") + "\n");
   }
   if (fresh.length) {
     const first = fresh[0];
