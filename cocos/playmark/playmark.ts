@@ -14,7 +14,7 @@ import { DEBUG, PREVIEW, EDITOR } from 'cc/env';
 import * as cc from 'cc';
 import { director, Director, game, sys, js, Node, UITransform, UIRenderer, Camera, MeshRenderer, Vec3, Vec2, geometry, VERSION } from 'cc';
 
-export const PLAYMARK_VERSION = '0.4.0';
+export const PLAYMARK_VERSION = '0.5.0';
 
 type Json = string | number | boolean | null | Json[] | { [k: string]: Json };
 type Known = { id: string; seq: number; status: string; note: string; category: string; scene: string; scope: string; marks: any[]; resolution: any; approved?: any; modified: number };

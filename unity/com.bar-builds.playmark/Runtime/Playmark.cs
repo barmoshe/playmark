@@ -14,7 +14,7 @@ namespace BarBuilds.Playmark
     /// </summary>
     public static class Playmark
     {
-        public const string Version = "0.4.0";
+        public const string Version = "0.5.0";
 
         /// <summary>The overlay opened (the game is frozen).</summary>
         public static event Action Opened;

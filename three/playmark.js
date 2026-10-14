@@ -12,7 +12,7 @@
 // development only: there is no debug flag in three.js to drop it from a release build.
 import * as THREE from 'three';
 
-export const PLAYMARK_VERSION = '0.4.0';
+export const PLAYMARK_VERSION = '0.5.0';
 
 const settings = {
     enabled: true,
