@@ -360,6 +360,13 @@ const POLL_IDLE_MS = 20000;
 const GHOSTS_KEY = 'playmark_ghosts';
 const _ghostPos = new Vec3();
 const _ghostScreen = new Vec3();
+/** An http(s) URL on this machine: localhost, 127.x or [::1]. */
+function isLoopbackUrl(u: string) {
+    const m = /^https?:\/\/(\[[^\]]+\]|[^/:?#]+)(:\d+)?(\/|$)/i.exec(u.trim());
+    if (!m) return false;
+    const host = m[1].toLowerCase();
+    return host === 'localhost' || host === '[::1]' || /^127(\.\d{1,3}){3}$/.test(host);
+}
 const r1 = (n: number) => Math.round(n * 10) / 10;
 const r3 = (n: number) => Math.round(n * 1000) / 1000;
 const pad = (n: number, w = 2) => { let s = String(n); while (s.length < w) s = '0' + s; return s; };
@@ -855,9 +862,13 @@ class Host {
         try { return scopeFn?.() ?? ''; } catch { return ''; }
     }
 
+    /**
+     * ?playmark_sink= may only point at this machine: a link that named another host would
+     * send every mark (frame, log, game state) there, starting with the first error.
+     */
     private sinkUrl() {
         const q = new URLSearchParams(location.search).get('playmark_sink');
-        return (q || settings.sink).replace(/\/$/, '');
+        return (q && isLoopbackUrl(q) ? q : settings.sink).replace(/\/$/, '');
     }
 
     private nextSeq() {

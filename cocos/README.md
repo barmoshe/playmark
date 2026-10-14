@@ -62,7 +62,7 @@ Playmark.settings.clipFps = 0;                          // no clip
 
 Other settings: `shortcut`, `ghostsShortcut`, `clipSeconds`, `clipMaxWidth` (480), `autoOnError`,
 `logLines`, `ghostsFixedHours`, `sink`. In the page URL, `?playmark=0` turns it off and
-`?playmark_sink=http://127.0.0.1:7478` points it at another sink. It starts only on pages served
+`?playmark_sink=http://127.0.0.1:7478` points it at another sink on this machine (any other host is ignored). It starts only on pages served
 from localhost, because the sink answers only those.
 
 ## What a mark holds
