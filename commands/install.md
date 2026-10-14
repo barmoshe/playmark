@@ -1,5 +1,5 @@
 ---
-description: "Install Playmark into a Godot 4.5+, Unity 6+ or Cocos Creator 3.8+ project (Godot: copies addons/playmark and enables it; Unity: embeds the package; Cocos: copies assets/playmark). Ignores .playmark/."
+description: "Install Playmark into a Godot 4.5+, Unity 6+, Cocos Creator 3.8+ or three.js project (Godot: copies addons/playmark and enables it; Unity: embeds the package; Cocos: copies assets/playmark; three.js: copies src/playmark/playmark.js). Ignores .playmark/."
 argument-hint: "[path to the game project] [--git]"
 ---
 

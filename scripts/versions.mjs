@@ -15,6 +15,7 @@ const PLACES = [
   { file: "unity/com.bar-builds.playmark/package.json", re: /("version":\s*")([^"]+)(")/ },
   { file: "unity/com.bar-builds.playmark/Runtime/Playmark.cs", re: /(public const string Version = ")([^"]+)(")/ },
   { file: "cocos/playmark/playmark.ts", re: /(PLAYMARK_VERSION = ')([^']+)(')/ },
+  { file: "three/playmark.js", re: /(PLAYMARK_VERSION = ')([^']+)(')/ },
 ];
 
 const read = (f) => fs.readFileSync(path.join(root, f), "utf8");

@@ -1,6 +1,6 @@
 # The mark format (schema 2)
 
-Playmark's engine side (the Godot addon, the Unity package, the Cocos script) and its agent side (`scripts/`,
+Playmark's engine side (the Godot addon, the Unity package, the Cocos script, the three.js module) and its agent side (`scripts/`,
 `hooks/`, the skill) only meet in this folder. Anything that writes it this way works with
 `/playmark:triage`, `inbox.mjs` and the in-game toasts.
 
@@ -42,8 +42,8 @@ Playmark's engine side (the Godot addon, the Unity package, the Cocos script) an
 | `frame_offset_s` | number | 0 for the freeze frame, negative for a rewound one |
 | `scope` | string | the game's room or area, from `set_scope` / `SetScope` |
 | `project` | `{name, version}` | |
-| `engine` | `{name, version}` | `name` is `godot`, `unity` or `cocos`. A bare string in marks before schema 2 means Godot. |
-| `os`, `debug_build` | string, bool | Unity adds `editor`, `render_pipeline`, `graphics`; Cocos adds `preview`, `url`, `device_pixel_ratio` |
+| `engine` | `{name, version}` | `name` is `godot`, `unity`, `cocos` or `three` (version: `THREE.REVISION`). A bare string in marks before schema 2 means Godot. |
+| `os`, `debug_build` | string, bool | Unity adds `editor`, `render_pipeline`, `graphics`; Cocos adds `preview`, `url`, `device_pixel_ratio`; three.js adds `url`, `device_pixel_ratio`, `camera` and has no `debug_build` |
 | `scene` | `{path, name}` | `res://...tscn` in Godot, `Assets/...unity` in Unity (`also_loaded` lists additive scenes). Cocos knows only the scene's name at runtime: `path` is that name |
 | `window_size`, `viewport_size`, `screenshot_size` | `[w, h]` | |
 | `fps`, `time_scale`, `uptime_s`, `mouse` | | `time_scale` before the freeze |
@@ -80,3 +80,15 @@ the same rules (`mark.json` last) and picks `id` and `seq`. The game reads statu
 from the scene root, `class` the drawing component (`cc.Sprite`, `cc.Label`, `cc.MeshRenderer`...),
 `script` the first component that isn't `cc.*` (a class name: search for it), plus `components`.
 `world` is `[x, y]` on the 2D/UI plane or `[x, y, z]` where the pin's ray hit a 3D bound.
+
+## three.js
+
+The three.js module posts to the same sink. `scene.path` is the scene's `name`, or the page path
+when it has none. `camera` is `{name, class}` of the camera it raycasts with. There is no
+`time_scale`. In `under_marks`, only `nodes` is filled (`physics` and `ui` stay empty): for a pin,
+the objects `THREE.Raycaster` hits from the camera (hidden objects and other layers skipped); for a
+box, drawn objects whose bounding-box center projects inside it. Nearest first, up to 10. Each
+entry: `path` (object names below the scene, an unnamed object as its type), `class` (`Mesh`,
+`Sprite`, `Points`...), `position`, `material` (name, else type; a list for multi-material),
+`geometry`, `user_data` (the keys of `userData`), `distance` from the camera, and for pins `world`
+(the hit point) and `instance` (an `InstancedMesh` index). `world` on the mark is the nearest hit.
