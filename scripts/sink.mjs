@@ -1,17 +1,23 @@
 #!/usr/bin/env node
 // The Cocos side's disk. A game in a browser can't write files, so it posts each mark here and
 // this writes the same .playmark folder the Godot addon and the Unity package write.
-//   sink.mjs [path] [--port 7477]
+//   sink.mjs [path] [--port 7477] [--lan] [--serve <web build>]
 // path = the Cocos project (package.json with "creator"), or a repo with it one level down.
 // Listens on 127.0.0.1 only and answers pages served from localhost only. Stop it with Ctrl+C.
 //   GET  /playmark/status   every mark's status, for the game's toasts and ghosts
 //   POST /playmark/marks    {data, files: {"screenshot.png": base64, ...}, log} -> {id, seq}
 //   POST /playmark/marks/<id>/verdict  {verdict: "approved" | "reopen" | "dismiss", note}
+// --serve also serves a web build. --lan (testing on a phone) serves it to this Wi-Fi too: every
+// request from another device needs the session token. The printed URL carries it (?pm=), and the
+// first page sets it as a cookie. Requests from this machine keep the localhost rules above.
+import crypto from "node:crypto";
 import fs from "node:fs";
 import http from "node:http";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { listMarks } from "./lib.mjs";
+import { qrText } from "./qr.mjs";
 
 const pluginRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const VERSION = JSON.parse(fs.readFileSync(path.join(pluginRoot, ".claude-plugin", "plugin.json"), "utf8")).version;
@@ -131,6 +137,57 @@ const localHost = (value) => {
   }
 };
 
+/** This machine's IPv4 addresses on its networks (Wi-Fi, Ethernet, virtual adapters). */
+export function lanAddresses() {
+  const out = [];
+  for (const [name, list] of Object.entries(os.networkInterfaces())) {
+    for (const a of list ?? []) if ((a.family === "IPv4" || a.family === 4) && !a.internal) out.push({ name, address: a.address });
+  }
+  return out;
+}
+
+// Byte lengths, not string lengths: timingSafeEqual throws on unequal buffers, and a crafted token must not crash the sink.
+const sameToken = (a, b) => {
+  if (typeof a !== "string") return false;
+  const x = Buffer.from(a), y = Buffer.from(b);
+  return x.length === y.length && crypto.timingSafeEqual(x, y);
+};
+
+const TYPES = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".mjs": "text/javascript", ".css": "text/css", ".json": "application/json",
+  ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp", ".svg": "image/svg+xml", ".ico": "image/x-icon",
+  ".wasm": "application/wasm", ".mp3": "audio/mpeg", ".ogg": "audio/ogg", ".wav": "audio/wav", ".m4a": "audio/mp4", ".mp4": "video/mp4",
+  ".ttf": "font/ttf", ".otf": "font/otf", ".woff": "font/woff", ".woff2": "font/woff2", ".txt": "text/plain; charset=utf-8" };
+
+/** The file under `serve` a URL path names, or null: never a dot-name, never outside `serve` (symlinks too), never in `root`. */
+export function staticFile(serve, root, pathname) {
+  let rel;
+  try {
+    rel = decodeURIComponent(pathname);
+  } catch {
+    return null;
+  }
+  if (rel.includes("\0") || rel.split(/[\\/]/).some((p) => p.startsWith("."))) return null;
+  const inside = (dir, f) => f === dir || f.startsWith(dir + path.sep);
+  try {
+    const base = fs.realpathSync(serve);
+    let file = fs.realpathSync(path.join(base, rel));
+    if (fs.statSync(file).isDirectory()) file = fs.realpathSync(path.join(file, "index.html"));
+    let marks = null;
+    try { marks = fs.realpathSync(root); } catch {}
+    if (file === base || !inside(base, file) || (marks && inside(marks, file)) || !fs.statSync(file).isFile()) return null;
+    return file;
+  } catch {
+    return null;
+  }
+}
+
+// A page served by a LAN sink learns it from this line, and then talks to the sink same-origin.
+const MARKER = "<script>window.PLAYMARK_LAN=1</script>";
+
+/**
+ * Default: localhost only, as described at the top. `serve`: also serves that folder.
+ * `lan` + `token`: also answers this machine's network addresses, when the request carries the token.
+ */
 // Hostile input (a malformed URL, a bad header) must get a 400, never take the sink down.
 const safe = (handler) => (req, res) => {
   try {
@@ -141,18 +198,55 @@ const safe = (handler) => (req, res) => {
   }
 };
 
-export function createSink(root) {
+export function createSink(root, { lan = false, serve = null, token = "" } = {}) {
+  if (lan && (!serve || !token)) throw new Error("LAN mode needs a folder to serve and a token");
   return http.createServer(safe((req, res) => {
     const origin = req.headers.origin;
+    const lanHosts = lan ? new Set(lanAddresses().map((a) => a.address)) : new Set();
+    const known = (value) => {
+      try {
+        const h = new URL(`http://${value}`).hostname;
+        return LOCAL.has(h) || lanHosts.has(h);
+      } catch {
+        return false;
+      }
+    };
     // A page on another site must not read or write marks, and a rebinding DNS name must not either.
-    const originOk = !origin || (origin.startsWith("http://") || origin.startsWith("https://")) && localHost(origin.replace(/^https?:\/\//, ""));
-    if (!localHost(req.headers.host ?? "") || !originOk) {
+    const originOk = !origin || (origin.startsWith("http://") || origin.startsWith("https://")) && known(origin.replace(/^https?:\/\//, ""));
+    if (!known(req.headers.host ?? "") || !originOk) {
       res.writeHead(403).end("Playmark's sink only answers pages on this machine.\n");
       return;
     }
-    const cors = origin ? { "access-control-allow-origin": origin, "access-control-allow-headers": "content-type", vary: "origin" } : {};
-    const send = (code, obj) => res.writeHead(code, { "content-type": "application/json", ...cors }).end(JSON.stringify(obj));
     const url = new URL(req.url, "http://localhost");
+    const extra = {};
+    if (lan) {
+      // From this machine to a localhost name, the default rules already hold. Anything else needs the token.
+      const loopback = /^(127\.|::1$|::ffff:127\.)/.test(req.socket.remoteAddress ?? "") && localHost(req.headers.host ?? "");
+      const name = `playmark_${req.socket.localPort}`; // cookies are per host, not per port
+      const cookie = (req.headers.cookie ?? "").split(/;\s*/).find((c) => c.startsWith(name + "="))?.slice(name.length + 1);
+      const query = url.searchParams.get("pm");
+      if (!loopback && !sameToken(query, token) && !sameToken(cookie, token)) {
+        res.writeHead(403, { "content-type": "text/plain; charset=utf-8" }).end("Playmark: open the URL with ?pm= that the sink printed. The token is new every time the sink starts.\n");
+        return;
+      }
+      if (sameToken(query, token)) extra["set-cookie"] = `${name}=${token}; Path=/; HttpOnly; SameSite=Strict`;
+      extra["cache-control"] = "no-store"; // a phone's browser would keep the last build
+    }
+    const cors = origin ? { "access-control-allow-origin": origin, "access-control-allow-headers": "content-type", vary: "origin" } : {};
+    const send = (code, obj) => res.writeHead(code, { "content-type": "application/json", ...cors, ...extra }).end(JSON.stringify(obj));
+    if (serve && (req.method === "GET" || req.method === "HEAD") && !url.pathname.startsWith("/playmark/")) {
+      const file = staticFile(serve, root, url.pathname);
+      if (!file) return send(404, { error: "not found" });
+      const type = TYPES[path.extname(file).toLowerCase()] ?? "application/octet-stream";
+      let body = fs.readFileSync(file);
+      if (lan && type.startsWith("text/html")) {
+        const html = body.toString("utf8");
+        const at = html.search(/<\/head>/i);
+        body = Buffer.from(at === -1 ? MARKER + html : html.slice(0, at) + MARKER + html.slice(at));
+      }
+      res.writeHead(200, { "content-type": type, "content-length": body.length, ...extra }).end(req.method === "HEAD" ? undefined : body);
+      return;
+    }
     if (req.method === "OPTIONS") {
       res.writeHead(204, { ...cors, "access-control-allow-methods": "GET, POST" }).end();
     } else if (req.method === "GET" && url.pathname === "/playmark/status") {
@@ -201,12 +295,18 @@ export function createSink(root) {
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const args = process.argv.slice(2);
   if (args.includes("--help") || args.includes("-h")) {
-    console.log("Usage: sink.mjs [path] [--port 7477]\n  path: the Cocos project, or a repo with it one level down (default: the current folder)");
+    console.log([
+      "Usage: sink.mjs [path] [--port 7477] [--lan] [--serve <dir>]",
+      "  path: the Cocos project, or a repo with it one level down (default: the current folder)",
+      "  --serve: also serve a web build folder (with --lan, default: the project's build/web-mobile or build/web-desktop)",
+      "  --lan: test on a phone on this Wi-Fi; prints a URL with a session token",
+    ].join("\n"));
     process.exit(0);
   }
-  const portAt = args.indexOf("--port");
-  const port = portAt === -1 ? 7477 : Number(args[portAt + 1]);
-  const start = path.resolve(args.find((a, i) => !a.startsWith("--") && args[i - 1] !== "--port") ?? process.cwd());
+  const value = (name) => (args.includes(name) ? args[args.indexOf(name) + 1] : undefined);
+  const port = Number(value("--port") ?? 7477);
+  const lan = args.includes("--lan");
+  const start = path.resolve(args.find((a, i) => !a.startsWith("--") && args[i - 1] !== "--port" && args[i - 1] !== "--serve") ?? process.cwd());
   let root = process.env.PLAYMARK_DIR ? path.resolve(process.env.PLAYMARK_DIR) : null;
   if (!root) {
     const project = findCocos(start);
@@ -216,5 +316,32 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     }
     root = path.join(project, ".playmark");
   }
-  createSink(root).listen(port, "127.0.0.1", () => console.log(`Playmark sink on http://127.0.0.1:${port}, saving to ${root}. Ctrl+C stops it.`));
+  let serve = value("--serve") && path.resolve(value("--serve"));
+  if (!serve && lan) serve = ["web-mobile", "web-desktop"].map((b) => path.join(path.dirname(root), "build", b)).find((d) => fs.existsSync(path.join(d, "index.html")));
+  if (lan && !serve) {
+    console.error("--lan serves the game to the phone: build it for web with Debug on, or pass --serve <web build folder>.");
+    process.exit(1);
+  }
+  if (serve && !fs.existsSync(path.join(serve, "index.html"))) {
+    console.error(`No index.html in ${serve}. Build the game for web (Debug on) first.`);
+    process.exit(1);
+  }
+  const token = lan ? crypto.randomBytes(16).toString("base64url") : "";
+  createSink(root, { lan, serve, token }).listen(port, lan ? "0.0.0.0" : "127.0.0.1", () => {
+    console.log(`Playmark sink on http://127.0.0.1:${port}, saving to ${root}. Ctrl+C stops it.`);
+    if (serve) console.log(`Serving ${serve} at http://localhost:${port}/`);
+    if (!lan) return;
+    const urls = lanAddresses().map((a) => ({ ...a, url: `http://${a.address}:${port}/?pm=${token}` }));
+    // Home Wi-Fi is nearly always 192.168.x.x; virtual adapters (WSL, Hyper-V, VPNs) come after it.
+    const wifi = urls.find((u) => u.address.startsWith("192.168.")) ?? urls.find((u) => u.address.startsWith("10.")) ?? urls[0];
+    if (!wifi) {
+      console.log("\nNo network address found. Is this computer on Wi-Fi?");
+      return;
+    }
+    console.log(`\nOn your phone, on the same Wi-Fi, open:\n\n    ${wifi.url}\n`);
+    if (process.stdout.isTTY) console.log(`or scan:\n\n${qrText(wifi.url)}\n`);
+    for (const u of urls) if (u !== wifi) console.log(`  on ${u.name}: ${u.url}`);
+    console.log("\nThe token (pm=) is new each run. Without it, other devices are refused.");
+    console.log("Nothing loads on the phone? Allow Node.js on private networks in the firewall (see cocos/README.md).");
+  });
 }
