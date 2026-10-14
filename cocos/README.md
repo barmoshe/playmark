@@ -72,8 +72,13 @@ for that one sink. Without it the sink refuses everything from another device: t
 status (notes included) and the game files. Requests from the PC itself keep the localhost rules,
 so the editor preview still works next to it. Only the PC's own addresses are accepted as a host,
 nothing under the build folder that starts with a dot is served (`.playmark/` included), and files
-outside it are not reachable through `..` or links. Plain HTTP: use a network you trust, and stop
-the sink (Ctrl+C) when you are done.
+outside it are not reachable through `..` or links. The page removes the token from its address as
+soon as it loads, and sends no referrer.
+
+**Use a Wi-Fi you trust.** It is plain HTTP. Anyone who can see the network's traffic (a shared or
+public Wi-Fi, a network whose password others know) can take the token and with it read the marks
+and their notes, add or dismiss marks, and change what the phone runs. Stop the sink (Ctrl+C) when
+you are done; the next start makes a new token.
 
 **Firewall.** If the phone can't load the page, the PC's firewall is blocking Node:
 - Windows: the first `--lan` start may ask to allow Node.js. Allow **Private networks** only. If you

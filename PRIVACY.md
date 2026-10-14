@@ -6,7 +6,9 @@ Playmark collects nothing.
   game logs, saved to `.playmark/` inside your game project. They are git-ignored by default.
 - **What it sends:** nothing to Bar Moshe or anyone else. A browser game (Cocos) can't write
   files, so it hands each mark to `scripts/sink.mjs`, a small server on your own machine
-  (127.0.0.1) that writes `.playmark/`. The game only talks to a sink on this machine.
+  (127.0.0.1) that writes `.playmark/`. The game only talks to a sink on this machine. Testing on
+  a phone (`sink.mjs --lan`, which you start yourself) sends the marks from the phone to your
+  computer over your Wi-Fi, unencrypted, and nowhere else.
 - **Your agent:** Claude Code or Codex reads those local files when you ask it to, under its own
   terms.
 - **Sharing:** `inbox.mjs export` writes a page to your disk; it goes only where you send it.

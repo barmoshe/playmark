@@ -147,3 +147,51 @@ test("LAN mode: a token with multi-byte characters is refused, not a crash", { s
     assert.equal((await request(port, "GET", `/playmark/status?pm=${TOKEN}`)).status, 200, "the sink is still up");
   });
 });
+
+// From a real network address (not 127.0.0.1), as a device on the Wi-Fi connects.
+function fromLan(port, rawPath, headers = {}) {
+  return new Promise((resolve, reject) => {
+    const req = http.request({ host: lanIp, port, method: "GET", path: rawPath, headers }, (res) => {
+      let text = "";
+      res.on("data", (c) => (text += c));
+      res.on("end", () => resolve({ status: res.statusCode, headers: res.headers, text }));
+    });
+    req.on("error", reject);
+    req.end();
+  });
+}
+
+test("LAN mode: a device on the Wi-Fi can't skip the token by claiming Host: localhost", { skip: !lanIp && "no network address" }, async () => {
+  const { game, root } = project();
+  const server = createSink(root, { lan: true, serve: game, token: TOKEN });
+  await new Promise((r) => server.listen(0, lanIp, r));
+  const port = server.address().port;
+  try {
+    for (const host of [`localhost:${port}`, `127.0.0.1:${port}`, `${lanIp}:${port}`]) {
+      assert.equal((await fromLan(port, "/playmark/status", { host })).status, 403, host);
+    }
+    assert.equal((await fromLan(port, `/playmark/status?pm=${TOKEN}`, { host: `${lanIp}:${port}` })).status, 200);
+  } finally {
+    server.close();
+  }
+});
+
+test("LAN mode: the page drops the token from its address, sends no referrer, and other ports or sites are refused", { skip: !lanIp && "no network address" }, async () => {
+  const { game, root } = project();
+  await withSink(root, { lan: true, serve: game, token: TOKEN }, async (port) => {
+    const page = await request(port, "GET", `/?pm=${TOKEN}`);
+    assert.equal(page.status, 200);
+    assert.equal(page.headers["referrer-policy"], "no-referrer");
+    const strip = page.text.indexOf("searchParams.delete('pm')");
+    assert.ok(strip > 0 && strip < page.text.indexOf("<title>"), "the token is stripped before anything else in <head> runs");
+    const cookie = page.headers["set-cookie"][0].split(";")[0];
+    assert.equal((await request(port, "GET", "/playmark/status", { cookie, origin: `http://${lanIp}:${port}` })).status, 200);
+    assert.equal((await request(port, "GET", "/playmark/status", { cookie, origin: `http://${lanIp}:${port + 1}` })).status, 403, "another port");
+  });
+  await withSink(root, { lan: false, serve: game }, async (port) => {
+    const r = await new Promise((resolve, reject) => {
+      http.get({ host: "127.0.0.1", port, path: "/src/app.js", headers: { host: `localhost:${port}`, "sec-fetch-site": "cross-site" } }, (res) => resolve(res.statusCode)).on("error", reject);
+    });
+    assert.equal(r, 403, "a <script> on another site can't load the build");
+  });
+});

@@ -3,7 +3,7 @@
 // this writes the same .playmark folder the Godot addon and the Unity package write.
 //   sink.mjs [path] [--port 7477] [--lan] [--serve <web build>]
 // path = the Cocos project (package.json with "creator"), or a repo with it one level down.
-// Listens on 127.0.0.1 only and answers pages served from localhost only. Stop it with Ctrl+C.
+// Listens on 127.0.0.1 and answers pages served from localhost only (with --lan, see below). Ctrl+C stops it.
 //   GET  /playmark/status   every mark's status, for the game's toasts and ghosts
 //   POST /playmark/marks    {data, files: {"screenshot.png": base64, ...}, log} -> {id, seq}
 //   POST /playmark/marks/<id>/verdict  {verdict: "approved" | "reopen" | "dismiss", note}
@@ -167,14 +167,20 @@ export function staticFile(serve, root, pathname) {
     return null;
   }
   if (rel.includes("\0") || rel.split(/[\\/]/).some((p) => p.startsWith("."))) return null;
-  const inside = (dir, f) => f === dir || f.startsWith(dir + path.sep);
+  // Native realpath: on Windows it returns long names in their real case, so PLAYMA~1 or a
+  // different case can't slip past the checks below.
+  const real = fs.realpathSync.native;
+  const lower = (p) => (process.platform === "win32" || process.platform === "darwin" ? p.toLowerCase() : p);
+  const inside = (dir, f) => lower(f) === lower(dir) || lower(f).startsWith(lower(dir) + path.sep);
   try {
-    const base = fs.realpathSync(serve);
-    let file = fs.realpathSync(path.join(base, rel));
-    if (fs.statSync(file).isDirectory()) file = fs.realpathSync(path.join(file, "index.html"));
+    const base = real(serve);
+    let file = real(path.join(base, rel));
+    if (fs.statSync(file).isDirectory()) file = real(path.join(file, "index.html"));
     let marks = null;
-    try { marks = fs.realpathSync(root); } catch {}
+    try { marks = real(root); } catch {}
     if (file === base || !inside(base, file) || (marks && inside(marks, file)) || !fs.statSync(file).isFile()) return null;
+    // The dot rule again, on what the path really resolved to.
+    if (path.relative(base, file).split(path.sep).some((p) => p.startsWith("."))) return null;
     return file;
   } catch {
     return null;
@@ -183,6 +189,9 @@ export function staticFile(serve, root, pathname) {
 
 // A page served by a LAN sink learns it from this line, and then talks to the sink same-origin.
 const MARKER = "<script>window.PLAYMARK_LAN=1</script>";
+// Runs first in <head>: the token is in the cookie now, so take it out of the address bar, the
+// history and whatever the game's own scripts (analytics) read from location.
+const STRIP_TOKEN = "<script>(function(){var u=new URL(location.href);if(u.searchParams.has('pm')){u.searchParams.delete('pm');history.replaceState(history.state,'',u.pathname+u.search+u.hash)}})()</script>";
 
 /**
  * Default: localhost only, as described at the top. `serve`: also serves that folder.
@@ -229,18 +238,32 @@ export function createSink(root, { lan = false, serve = null, token = "" } = {})
         res.writeHead(403, { "content-type": "text/plain; charset=utf-8" }).end("Playmark: open the URL with ?pm= that the sink printed. The token is new every time the sink starts.\n");
         return;
       }
+      // A page on another port of this address (another dev server) is not the game.
+      if (origin && !loopback) {
+        let o = null;
+        try { o = new URL(origin); } catch {}
+        if (!o || o.host !== (req.headers.host ?? "")) {
+          res.writeHead(403).end("Playmark's sink only answers the game it serves.\n");
+          return;
+        }
+      }
       if (sameToken(query, token)) extra["set-cookie"] = `${name}=${token}; Path=/; HttpOnly; SameSite=Strict`;
       extra["cache-control"] = "no-store"; // a phone's browser would keep the last build
+      extra["referrer-policy"] = "no-referrer"; // the first URL carries the token
     }
     const cors = origin ? { "access-control-allow-origin": origin, "access-control-allow-headers": "content-type", vary: "origin" } : {};
     const send = (code, obj) => res.writeHead(code, { "content-type": "application/json", ...cors, ...extra }).end(JSON.stringify(obj));
     if (serve && (req.method === "GET" || req.method === "HEAD") && !url.pathname.startsWith("/playmark/")) {
+      // <script src="http://localhost:7477/..."> on some other site must not load the game's code.
+      if (req.headers["sec-fetch-site"] === "cross-site") return send(403, { error: "cross-site" });
       const file = staticFile(serve, root, url.pathname);
       if (!file) return send(404, { error: "not found" });
       const type = TYPES[path.extname(file).toLowerCase()] ?? "application/octet-stream";
       let body = fs.readFileSync(file);
       if (lan && type.startsWith("text/html")) {
-        const html = body.toString("utf8");
+        let html = body.toString("utf8");
+        const open = html.match(/<head[^>]*>/i);
+        html = open ? html.replace(open[0], open[0] + STRIP_TOKEN) : STRIP_TOKEN + html;
         const at = html.search(/<\/head>/i);
         body = Buffer.from(at === -1 ? MARKER + html : html.slice(0, at) + MARKER + html.slice(at));
       }
@@ -332,8 +355,12 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     if (serve) console.log(`Serving ${serve} at http://localhost:${port}/`);
     if (!lan) return;
     const urls = lanAddresses().map((a) => ({ ...a, url: `http://${a.address}:${port}/?pm=${token}` }));
-    // Home Wi-Fi is nearly always 192.168.x.x; virtual adapters (WSL, Hyper-V, VPNs) come after it.
-    const wifi = urls.find((u) => u.address.startsWith("192.168.")) ?? urls.find((u) => u.address.startsWith("10.")) ?? urls[0];
+    // The QR gets the likeliest Wi-Fi: a private address on an adapter that isn't virtual (VirtualBox,
+    // Docker, WSL/Hyper-V, VPN tunnels). Every address is listed below it anyway.
+    const virtual = /vbox|virtualbox|vmnet|vethernet|hyper-v|wsl|docker|br-|veth|utun|tun|tap|tailscale|zerotier|zt/i;
+    const priv = (a) => /^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(a);
+    const rank = (u) => (virtual.test(u.name) ? 2 : 0) + (priv(u.address) ? 0 : 1);
+    const wifi = [...urls].sort((a, b) => rank(a) - rank(b))[0];
     if (!wifi) {
       console.log("\nNo network address found. Is this computer on Wi-Fi?");
       return;
