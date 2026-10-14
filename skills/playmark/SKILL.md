@@ -54,8 +54,9 @@ Rules:
 
 ## Install
 
-`node <plugin>/scripts/install.mjs [path] [--git]`. It finds `project.godot` (Godot) or
-`ProjectSettings/ProjectVersion.txt` (Unity), in the folder or one level down.
+`node <plugin>/scripts/install.mjs [path] [--git]`. It finds `project.godot` (Godot),
+`ProjectSettings/ProjectVersion.txt` (Unity) or a `package.json` with `"creator"` (Cocos Creator), in the
+folder or one level down.
 
 - **Godot 4.5+:** copies `addons/playmark`, registers the autoload, enables the plugin. If `project.godot` declares an older version, say Playmark needs 4.5 (the Logger API) and stop. Then: run the game from Godot (or `godot --path <project>`) and press **Ctrl+Shift+M**.
 - **Unity 6+:** embeds the package in `Packages/com.bar-builds.playmark` (`--git` pins a git URL instead). Then: switch to Unity so it imports, press Play, **Ctrl+Shift+M**. To try it: Package Manager, Playmark, Samples, **Toy scene**, then Tools, Playmark, Create Toy Scene.

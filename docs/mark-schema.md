@@ -8,7 +8,7 @@ Playmark's engine side (the Godot addon, the Unity package, the Cocos script) an
 <project>/.playmark/
   .gitignore            "*": marks stay local
   inbox/<id>/           open marks
-  done/<id>/            fixed marks (inbox.mjs resolve moves them here)
+  done/<id>/            fixed marks (inbox.mjs resolve moves them here; so does a player's Dismiss)
   requests/<id>.json    runs asked of the Unity Editor (warp, smoke); <id>.result.json answers
 ```
 
@@ -34,7 +34,7 @@ Playmark's engine side (the Godot addon, the Unity package, the Cocos script) an
 | `schema` | 2 | absent in older Godot marks |
 | `id`, `seq` | string, int | `seq` is the number the player sees (#14) |
 | `created_at` | string | local `YYYY-MM-DDTHH:MM:SS` |
-| `status` | `new` \| `working` \| `fixed` | the game turns changes into toasts; only the agent side (`inbox.mjs`) writes `working` and `fixed` |
+| `status` | `new` \| `working` \| `fixed` | the game turns changes into toasts; the agent side (`inbox.mjs`) writes `working` and `fixed`; the player's Dismiss (Cocos) also writes `fixed`, with `dismissed: true` |
 | `source` | `player` \| `auto-error` | |
 | `category` | `bug` \| `feel` \| `art` \| `balance` \| `idea` \| `""` | |
 | `note` | string | the player's words |

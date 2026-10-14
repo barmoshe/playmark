@@ -18,6 +18,7 @@ const VERSION = JSON.parse(fs.readFileSync(path.join(pluginRoot, ".claude-plugin
 const MAX_BODY = 64 * 1024 * 1024;
 const FILE = /^(screenshot|annotated|clip_sheet)\.png$|^clip\/\d{3}\.png$/;
 const LOCAL = new Set(["localhost", "127.0.0.1", "[::1]"]);
+const AGENT_KEYS = new Set(["status", "resolution", "approved", "dismissed", "reopened", "claimed_at", "id", "seq", "schema"]);
 
 export const isCocos = (dir) => {
   try {
@@ -66,6 +67,8 @@ export function verdict(root, id, body) {
     const from = path.join(root, "inbox", id);
     if (!fs.existsSync(path.join(from, "mark.json"))) throw new Error("only an open mark can be dismissed");
     const data = JSON.parse(fs.readFileSync(path.join(from, "mark.json"), "utf8"));
+    // The agent is on it: moving the mark now would make its `inbox.mjs resolve` fail.
+    if (data.status === "working") throw new Error("the agent is working on this mark; wait for its fix");
     const target = path.join(root, "done", id);
     fs.mkdirSync(path.dirname(target), { recursive: true });
     fs.renameSync(from, target);
@@ -110,8 +113,12 @@ export function writeMark(root, body) {
   for (const [name, b64] of Object.entries(files)) fs.writeFileSync(path.join(folder, name), Buffer.from(b64, "base64"));
   if (!fs.readdirSync(path.join(folder, "clip")).length) fs.rmdirSync(path.join(folder, "clip"));
   fs.writeFileSync(path.join(folder, "log.txt"), String(log));
-  fs.writeFileSync(path.join(root, ".gitignore"), "*\n");
-  const mark = { ...data, playmark: data.playmark ?? VERSION, schema: 2, id, seq, status: "new" };
+  // Once: someone who un-ignored marks on purpose keeps that.
+  if (!fs.existsSync(path.join(root, ".gitignore"))) fs.writeFileSync(path.join(root, ".gitignore"), "# Playmark marks stay local by default.\n*\n");
+  // Only what a game reports: verdicts, fixes and claims are written by the agent's side and the
+  // player's verdict, never by the page that posts the mark.
+  const own = Object.fromEntries(Object.entries(data).filter(([k]) => !AGENT_KEYS.has(k)));
+  const mark = { ...own, playmark: data.playmark ?? VERSION, schema: 2, id, seq, status: "new" };
   fs.writeFileSync(path.join(folder, "mark.json"), JSON.stringify(mark, null, 2) + "\n");
   return { id, seq, folder };
 }
@@ -156,8 +163,9 @@ export function createSink(root) {
       req.on("data", (c) => {
         size += c.length;
         if (size > MAX_BODY) {
-          send(413, { error: "The mark is over 64 MB." });
-          req.destroy();
+          // Stop buffering but let the upload finish, so the 413 reaches the page.
+          if (!res.headersSent) send(413, { error: "The mark is over 64 MB." });
+          chunks.length = 0;
         } else chunks.push(c);
       });
       req.on("end", () => {

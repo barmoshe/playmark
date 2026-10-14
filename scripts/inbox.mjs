@@ -131,7 +131,8 @@ switch (cmd) {
     const f = (name) => path.join(m.folder, name);
     console.log(`# Mark #${m.seq} ${m.id} (${m.status}${m.source === "auto-error" ? ", auto-captured on an error" : ""})`);
     console.log(`category: ${m.category || "-"}\nnote: ${m.note || "(none)"}`);
-    if (m.approved) console.log(`approved by the player in the game: ${m.approved.at}`);
+    if (m.dismissed) console.log(`dismissed by the player in the game: ${m.approved?.at ?? ""} (not fixed: a test, or not a problem)`);
+    else if (m.approved) console.log(`approved by the player in the game: ${m.approved.at}`);
     for (const r of m.reopened ?? []) console.log(`reopened by the player ${r.at}: the earlier fix ("${r.resolution?.note ?? ""}") did not hold${r.note ? `; they said: ${r.note}` : ""}`);
     console.log(`game: ${m.project?.name} ${m.project?.version} · ${engineLabel(m)} · ${m.os}${m.render_pipeline ? " · " + m.render_pipeline : ""}`);
     console.log(`scene: ${m.scene?.path}   at ${m.uptime_s}s, ${m.fps} fps, time_scale ${m.time_scale}`);

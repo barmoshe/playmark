@@ -101,7 +101,7 @@ class Overlay {
         document.body.appendChild(this.root);
         // Capture phase on window: the game's own key listeners never see a key typed here.
         window.addEventListener('keydown', this.keyHandler, true);
-        window.addEventListener('keyup', this.stopKey, true);
+        // Keyups go through: a key held when the overlay opened must still be let go in the game.
         window.addEventListener('resize', this.draw);
         this.draw();
     }
@@ -144,7 +144,7 @@ class Overlay {
 
     close() {
         window.removeEventListener('keydown', this.keyHandler, true);
-        window.removeEventListener('keyup', this.stopKey, true);
+
         window.removeEventListener('resize', this.draw);
         this.root.remove();
         this.onClose?.();
@@ -322,7 +322,6 @@ class Overlay {
         this.draw();
     }
 
-    private stopKey = (e: KeyboardEvent) => e.stopPropagation();
 
     private onKey(e: KeyboardEvent) {
         e.stopPropagation();
@@ -419,7 +418,8 @@ class LogRing {
         if (level === 'Error' && stack) for (const l of stack.trim().split('\n')) this.push('    ' + l.trim());
         if (level === 'Error' && !this.mute && !message.startsWith('Playmark')) {
             const first = message.split('\n')[0].slice(0, 200);
-            if (!this.seen.has(first)) { this.seen.add(first); this.errors.push(first); }
+            // Errors wait here until the sink is up; only a few ever become marks.
+            if (!this.seen.has(first) && this.errors.length < 10) { this.seen.add(first); this.errors.push(first); }
         }
     }
 
@@ -674,8 +674,13 @@ class Host {
     }
 
     private async loop() {
-        if (!document.hidden) await this.poll();
-        setTimeout(() => this.loop(), this.sinkUp ? POLL_MS : POLL_IDLE_MS);
+        try {
+            if (!document.hidden) await this.poll();
+        } catch (e) {
+            console.warn('Playmark: status poll failed', e);
+        } finally {
+            setTimeout(() => this.loop(), this.sinkUp ? POLL_MS : POLL_IDLE_MS);
+        }
     }
 
     private onKey(e: KeyboardEvent) {
@@ -703,8 +708,8 @@ class Host {
         if (now - this.fpsSince >= 1000) { this.fps = Math.round(this.fpsFrames * 1000 / (now - this.fpsSince)); this.fpsFrames = 0; this.fpsSince = now; }
         if (this.opening) { this.opening = false; this.open(); return; }
         if (this.overlay) return;
-        const err = this.log.errors.shift();
-        if (err && settings.autoOnError && this.sinkUp && !this.busy && this.autoMarks < MAX_AUTO_MARKS) { this.autoMark(err); return; }
+        // An error waits in the queue until the sink answers and no mark is saving.
+        if (this.log.errors.length && settings.autoOnError && this.sinkUp && !this.busy && this.autoMarks < MAX_AUTO_MARKS) { this.autoMark(this.log.errors.shift()!); return; }
         this.captureClip(now);
         this.drawGhosts();
     }
@@ -890,6 +895,7 @@ class Host {
         try {
             const res = await fetch(`${this.sinkUrl()}/playmark/status`, { cache: 'no-store' });
             list = (await res.json()).marks;
+            if (!Array.isArray(list)) throw new Error('not a Playmark sink');
         } catch {
             if (!this.polled) this.toast('error', 'Playmark: no sink', `Marks need the sink. In the project folder: node <playmark>/scripts/sink.mjs`, `${settings.shortcut.toUpperCase()} STILL OPENS THE OVERLAY`, 8);
             this.polled = true;
@@ -1028,7 +1034,7 @@ class Host {
             btn('APPROVE', BRAND.blue, BRAND.ink, () => this.verdict(m, 'approved'));
             btn('STILL BROKEN', 'transparent', BRAND.paper, () => this.verdict(m, 'reopen'));
         } else {
-            btn('DISMISS', 'transparent', BRAND.paper, () => this.verdict(m, 'dismiss'));   // a test, or not a problem after all
+            if (m.status !== 'working') btn('DISMISS', 'transparent', BRAND.paper, () => this.verdict(m, 'dismiss'));   // a test, or not a problem after all
         }
         btn('CLOSE', 'transparent', BRAND.ink2, () => { c.remove(); this.card = null; });
         document.body.appendChild(c);
