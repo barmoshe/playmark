@@ -175,7 +175,7 @@ switch (cmd) {
     const project = path.dirname(root);
     const shotPath = flag("--shot");
     if (isCocos(project)) noWebRuns("warp", "Cocos Creator");
-    if (isThree(project)) noWebRuns("warp", "three.js");
+    if (isThree(project) && !isUnity(project) && !fs.existsSync(path.join(project, "project.godot"))) noWebRuns("warp", "three.js");
     if (isUnity(project) && !process.env.PLAYMARK_UNITY_PLAYER) {
       const result = unityRequest(root, { action: "warp", mark: m.id, ...(shotPath ? { shot: path.resolve(shotPath) } : {}) }, Boolean(shotPath));
       if (result) console.log(result.shot ?? path.resolve(shotPath));
@@ -264,7 +264,7 @@ switch (cmd) {
     const project = path.dirname(root);
     const out = path.resolve(flag("--out") ?? path.join(root, "smoke"));
     if (isCocos(project)) noWebRuns("smoke", "Cocos Creator");
-    if (isThree(project)) noWebRuns("smoke", "three.js");
+    if (isThree(project) && !isUnity(project) && !fs.existsSync(path.join(project, "project.godot"))) noWebRuns("smoke", "three.js");
     if (isUnity(project)) {
       unityRequest(root, { action: "smoke", out }, true);
     } else {

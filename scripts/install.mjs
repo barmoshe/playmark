@@ -37,19 +37,18 @@ const start = path.resolve(args.find((a) => !a.startsWith("--")) ?? process.cwd(
 const isGodot = (dir) => fs.existsSync(path.join(dir, "project.godot"));
 const isUnity = (dir) => fs.existsSync(path.join(dir, "ProjectSettings", "ProjectVersion.txt")) && fs.existsSync(path.join(dir, "Assets"));
 
+// An engine project wins over three.js anywhere it is: a repo whose root package.json uses three
+// for a site or a tool can still hold the real game one level down.
 function findProject(dir) {
-  if (isGodot(dir)) return { dir, engine: "godot" };
-  if (isUnity(dir)) return { dir, engine: "unity" };
-  if (isCocos(dir)) return { dir, engine: "cocos" };
-  if (isThree(dir)) return { dir, engine: "three" };
-  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-    if (!e.isDirectory() || e.name.startsWith(".") || e.name === "node_modules") continue;
-    const sub = path.join(dir, e.name);
-    if (isGodot(sub)) return { dir: sub, engine: "godot" };
-    if (isUnity(sub)) return { dir: sub, engine: "unity" };
-    if (isCocos(sub)) return { dir: sub, engine: "cocos" };
-    if (isThree(sub)) return { dir: sub, engine: "three" };
+  const subs = fs.readdirSync(dir, { withFileTypes: true })
+    .filter((e) => e.isDirectory() && !e.name.startsWith(".") && e.name !== "node_modules")
+    .map((e) => path.join(dir, e.name));
+  for (const d of [dir, ...subs]) {
+    if (isGodot(d)) return { dir: d, engine: "godot" };
+    if (isUnity(d)) return { dir: d, engine: "unity" };
+    if (isCocos(d)) return { dir: d, engine: "cocos" };
   }
+  for (const d of [dir, ...subs]) if (isThree(d)) return { dir: d, engine: "three" };
   return null;
 }
 

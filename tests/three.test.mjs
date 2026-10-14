@@ -77,3 +77,17 @@ test("the sink finds a three.js project, and the inbox reads its marks", () => {
   assert.match(fails("scripts/inbox.mjs", ["warp", "1"], game), /isn't available for three\.js/);
   assert.match(fails("scripts/inbox.mjs", ["smoke"], game), /isn't available for three\.js/);
 });
+
+test("an engine project wins over a three.js package.json above it", () => {
+  const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "playmark-three-")));
+  fs.writeFileSync(path.join(dir, "package.json"), JSON.stringify({ name: "site", dependencies: { three: "0.170.0" } }));
+  fs.mkdirSync(path.join(dir, "game"));
+  fs.writeFileSync(path.join(dir, "game", "project.godot"), 'config_version=5\n\n[application]\n\nconfig/name="G"\n');
+  run("scripts/install.mjs", [dir], dir);
+  assert.ok(fs.existsSync(path.join(dir, "game", "addons", "playmark", "playmark.gd")), "the Godot game got the addon");
+  assert.ok(!fs.existsSync(path.join(dir, "playmark")), "nothing copied for three at the top");
+  const cocos = path.join(dir, "cocos");
+  fs.mkdirSync(path.join(cocos, "assets"), { recursive: true });
+  fs.writeFileSync(path.join(cocos, "package.json"), JSON.stringify({ name: "c", creator: { version: "3.8.8" } }));
+  assert.equal(findWeb(dir), cocos, "the sink picks the Cocos game, not the three.js package.json above it");
+});

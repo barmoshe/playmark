@@ -44,14 +44,13 @@ export const isThree = (dir) => {
   }
 };
 
-const isWeb = (dir) => isCocos(dir) || isThree(dir);
 
+// Cocos anywhere before three.js anywhere, as in install.mjs.
 export function findWeb(dir) {
-  if (isWeb(dir)) return dir;
-  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-    if (e.isDirectory() && !e.name.startsWith(".") && e.name !== "node_modules" && isWeb(path.join(dir, e.name))) return path.join(dir, e.name);
-  }
-  return null;
+  const subs = fs.readdirSync(dir, { withFileTypes: true })
+    .filter((e) => e.isDirectory() && !e.name.startsWith(".") && e.name !== "node_modules")
+    .map((e) => path.join(dir, e.name));
+  return [dir, ...subs].find(isCocos) ?? [dir, ...subs].find(isThree) ?? null;
 }
 
 const pad = (n, w = 2) => String(n).padStart(w, "0");
